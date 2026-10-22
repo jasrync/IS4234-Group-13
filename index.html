@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AML GRC Control Monitoring &amp; Risk Escalation Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #17243b;
+      --muted: #69788d;
+      --navy: #10213d;
+      --navy-2: #183254;
+      --canvas: #f4f7fb;
+      --card: #ffffff;
+      --line: #dce5ef;
+      --red: #d94a55;
+      --red-soft: #fff0f1;
+      --amber: #d79625;
+      --amber-soft: #fff7e6;
+      --green: #218b68;
+      --green-soft: #e9f7f1;
+      --blue: #3875bd;
+      --blue-soft: #edf4fc;
+      --shadow: 0 12px 32px rgba(17, 38, 67, .07);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: "DM Sans", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; }
+    .app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+    .topbar {
+      background: var(--navy);
+      color: white;
+      padding: 26px clamp(20px, 5vw, 72px) 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .topbar::after {
+      content: ""; position: absolute; width: 420px; height: 420px; right: -110px; top: -250px;
+      border: 1px solid rgba(150, 190, 224, .2); border-radius: 50%; box-shadow: 0 0 0 34px rgba(150, 190, 224, .05), 0 0 0 70px rgba(150, 190, 224, .04);
+    }
+    .topbar-inner, .content, .footer-inner { max-width: 1440px; width: 100%; margin: auto; position: relative; z-index: 1; }
+    .topbar-inner { display: flex; align-items: flex-start; justify-content: space-between; gap: 28px; }
+    .eyebrow { color: #9db9d8; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 10px; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-family: "Space Grotesk", sans-serif; font-size: clamp(24px, 3vw, 38px); letter-spacing: -.035em; line-height: 1.08; margin-bottom: 12px; max-width: 760px; }
+    .subtitle { color: #b9c8da; font-size: 14px; max-width: 690px; margin-bottom: 0; line-height: 1.55; }
+    .view-toggle { min-width: 242px; padding-top: 3px; }
+    .toggle-label { display: flex; align-items: center; gap: 11px; color: #dbe7f3; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .toggle-label input { position: absolute; opacity: 0; }
+    .switch { width: 42px; height: 24px; border-radius: 99px; background: #4a617f; position: relative; transition: .2s ease; pointer-events: none; }
+    .switch::after { content: ""; width: 18px; height: 18px; border-radius: 50%; background: #fff; position: absolute; top: 3px; left: 3px; transition: .2s ease; box-shadow: 0 2px 5px #09162a66; }
+    .toggle-label input:checked + .switch { background: #69b897; }
+    .toggle-label input:checked + .switch::after { transform: translateX(18px); }
+    .mode-copy { margin: 9px 0 0 53px; color: #8da5c1; font-size: 11px; }
+    .mode-copy + .mode-copy { margin-top: 5px; max-width: 220px; line-height: 1.45; }
+    .regulator-banner { display: none; background: #fffbef; border-bottom: 1px solid #f3dfae; color: #7d5c1c; padding: 11px 20px; text-align: center; font-size: 13px; font-weight: 600; }
+    .regulator-banner.visible { display: block; }
+
+    .content { padding: 34px clamp(20px, 5vw, 72px) 48px; flex: 1; }
+    .summary-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; margin-bottom: 22px; }
+    h2 { font-family: "Space Grotesk", sans-serif; font-size: 22px; margin-bottom: 5px; letter-spacing: -.025em; }
+    .section-intro { color: var(--muted); font-size: 13px; margin-bottom: 0; }
+    .summary-metrics { display: flex; gap: 26px; }
+    .metric { padding-left: 18px; border-left: 1px solid var(--line); }
+    .metric-value { display: block; font-family: "Space Grotesk", sans-serif; font-size: 25px; font-weight: 700; line-height: 1; }
+    .metric-label { display: block; color: var(--muted); font-size: 11px; margin-top: 5px; white-space: nowrap; }
+    .metric.alert .metric-value { color: var(--red); }
+
+    .simulation-panel { background: #202b3b; border: 2px dashed #d79625; border-radius: 4px; box-shadow: 0 14px 34px rgba(10, 22, 39, .2); color: #eaf1f8; font-family: "IBM Plex Mono", monospace; margin-bottom: 18px; overflow: hidden; position: relative; }
+    .simulation-panel::before { background: repeating-linear-gradient(135deg, #d79625 0, #d79625 8px, #202b3b 8px, #202b3b 16px); content: ""; height: 5px; left: 0; position: absolute; right: 0; top: 0; }
+    .content > section[aria-labelledby="dashboardTitle"] { display: flex; flex-direction: column; }
+    .summary-row { order: 1; }
+    .portfolio-panel { order: 2; }
+    .register-tab { order: 3; }
+    .filter-bar, .register-layout { order: 4; }
+    .simulation-tab { order: 5; }
+    .simulation-panel { order: 6; }
+    .evidence-tab { order: 7; }
+    .evidence-section { order: 8; }
+    .section-tab { color: var(--navy); font-size: 11px; font-weight: 700; letter-spacing: .1em; margin: 27px 0 10px; text-transform: uppercase; }
+    .section-tab span { color: var(--blue); }
+    .simulation-head { align-items: center; border-bottom: 1px solid #465468; display: flex; justify-content: space-between; gap: 18px; padding: 21px 20px 17px; }
+    .simulation-kicker { color: #f0bd55; font-size: 10px; font-weight: 700; letter-spacing: .16em; margin: 0 0 8px; text-transform: uppercase; }
+    .simulation-title { color: #fff; font-size: 16px; margin: 0; }
+    .simulation-subtitle { color: #aab9c9; font-size: 12px; line-height: 1.5; margin: 5px 0 0; }
+    .simulation-live { background: transparent; border: 1px solid #6b7b8e; border-radius: 2px; color: #c8d3df; font-size: 10px; font-weight: 700; padding: 6px 9px; white-space: nowrap; }
+    .simulation-disclaimer { border-bottom: 1px solid #465468; color: #bdc9d6; font-size: 11px; line-height: 1.55; margin: 0; padding: 0 20px 15px; }
+    .simulation-disclaimer strong { color: #f0bd55; display: block; font-size: 11px; letter-spacing: .12em; margin-bottom: 5px; }
+    .simulation-body { display: grid; grid-template-columns: 1fr 1.25fr; gap: 20px; padding: 18px 20px 20px; }
+    .simulation-controls { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
+    .scenario-steps { border-bottom: 1px solid #465468; display: flex; gap: 0; list-style: none; margin: 0; overflow-x: auto; padding: 0 20px; }
+    .scenario-step { color: #7f91a6; flex: 1 0 auto; font-size: 10px; font-weight: 700; padding: 11px 9px 10px; text-align: center; }
+    .scenario-step.current { border-bottom: 3px solid #f0bd55; color: #f0bd55; }
+    .scenario-step.complete { color: #73c8a5; }
+    .sim-day { background: #101a2b; border: 1px solid #53657a; border-radius: 2px; color: #fff; min-width: 122px; padding: 9px 11px; }
+    .sim-day strong, .sim-day span { display: block; }
+    .sim-day strong { font-size: 12px; }
+    .sim-day span { color: #b9c8da; font-size: 10px; margin-top: 3px; }
+    .sim-button { background: transparent; border: 1px solid #718196; border-radius: 2px; color: #d8e2ec; cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 600; padding: 10px 11px; }
+    .sim-button::before { color: #f0bd55; content: "> "; }
+    .sim-button:hover { background: #2b3a4e; border-color: #b6c4d2; }
+    .sim-button.primary { border-color: #73c8a5; color: #a8e1c7; }
+    .sim-button.primary:hover { background: #1b443b; }
+    .sim-button.unhappy { border-color: #e16a73; color: #ffb3b8; }
+    .sim-button.unhappy:hover { background: #4a2934; }
+    .sim-button:disabled { cursor: wait; opacity: .65; }
+    .simulation-state { background: #172335; border: 1px solid #465468; border-radius: 2px; padding: 12px 14px; }
+    .simulation-state strong { color: #fff; display: block; font-size: 12px; }
+    .simulation-state p { color: #aab9c9; font-size: 11px; line-height: 1.45; margin: 4px 0 0; }
+    .simulation-caption { color: #f0bd55; font-size: 11px; font-weight: 700; min-height: 16px; opacity: 0; padding-top: 9px; transition: opacity .25s ease; }
+    .simulation-caption.visible { opacity: 1; }
+    .simulation-caption.good { color: #73c8a5; }
+    .simulation-caption.bad { color: #ff9ea6; }
+    .portfolio-panel { background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); margin: 0 0 18px; padding: 18px 20px 20px; }
+    .portfolio-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 28px; align-items: center; }
+    .chart-block { min-width: 0; }
+    .chart-title { font-size: 12px; font-weight: 700; margin: 0 0 10px; }
+    .donut-wrap { align-items: center; display: flex; gap: 18px; }
+    .donut { height: 128px; position: relative; width: 128px; }
+    .donut svg { height: 100%; transform: rotate(-90deg); width: 100%; }
+    .donut circle { fill: none; stroke-width: 13; stroke-dasharray: 0 100; transition: stroke-dasharray .35s ease, stroke-dashoffset .35s ease; }
+    .donut-hole { align-items: center; display: flex; flex-direction: column; inset: 0; justify-content: center; position: absolute; }
+    .donut-hole strong { font-family: "Space Grotesk", sans-serif; font-size: 22px; }
+    .donut-hole span { color: var(--muted); font-size: 10px; }
+    .chart-legend { display: grid; gap: 7px; }
+    .legend-item { align-items: center; display: flex; font-size: 11px; gap: 7px; }
+    .legend-item i { border-radius: 50%; height: 8px; width: 8px; }
+    .trend-caption { color: var(--muted); font-size: 11px; margin: -3px 0 9px; }
+    .trend-chart { display: block; height: 128px; width: 100%; }
+    .trend-labels { color: var(--muted); display: flex; font-size: 10px; justify-content: space-between; margin-top: 2px; }
+    .filter-bar { align-items: end; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); display: flex; flex-wrap: wrap; gap: 14px 20px; justify-content: space-between; margin-bottom: 16px; padding: 14px 16px; }
+    .filter-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .filter-label { color: var(--muted); display: block; font-size: 10px; font-weight: 700; letter-spacing: .07em; margin-bottom: 6px; text-transform: uppercase; width: 100%; }
+    .filter-button { background: #f1f4f8; border: 1px solid transparent; border-radius: 99px; color: #50647c; cursor: pointer; font-size: 10px; font-weight: 700; padding: 6px 9px; }
+    .filter-button.active { background: var(--navy); color: #fff; }
+    .filter-button:hover { border-color: #9db4cc; }
+    .owner-filter { background: #f1f4f8; border: 1px solid var(--line); border-radius: 5px; color: #50647c; font-size: 11px; padding: 7px 9px; }
+    .filter-count { color: var(--muted); font-size: 11px; margin: 0 0 2px auto; white-space: nowrap; }
+    .register-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; }
+    .alerts-panel { align-self: start; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); padding: 17px 16px; }
+    .alerts-heading { align-items: center; display: flex; justify-content: space-between; margin-bottom: 12px; }
+    .alerts-heading h3 { font-size: 14px; margin: 0; }
+    .alert-count { background: var(--red-soft); border-radius: 99px; color: var(--red); font-size: 10px; font-weight: 700; padding: 4px 7px; }
+    .alert-item { border-left: 2px solid var(--amber); color: #41546b; font-size: 11px; line-height: 1.4; margin-top: 9px; padding: 3px 0 3px 9px; }
+    .alert-item.critical { border-color: var(--red); }
+    @media (max-width: 1100px) { .portfolio-grid, .register-layout { grid-template-columns: 1fr; } .alerts-panel { order: -1; } }
+    .activity-title { align-items: center; display: flex; justify-content: space-between; margin: 17px 0 8px; }
+    .activity-title strong { font-size: 12px; }
+    .activity-title span { color: #8fa1b5; font-size: 10px; }
+    .activity-feed { display: grid; gap: 7px; max-height: 112px; overflow: auto; }
+    .activity-entry { border-left: 2px solid #6d91bd; padding-left: 9px; }
+    .activity-entry.good { border-color: #73c8a5; }
+    .activity-entry.bad { border-color: #e16a73; }
+    .activity-meta { color: #8fa1b5; font-size: 10px; }
+    .activity-action { color: #d2dce7; font-size: 11px; margin-top: 2px; }
+    .evidence-section { background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); margin-top: 18px; padding: 18px 20px 20px; }
+    .evidence-intro { color: var(--muted); font-size: 12px; margin: -3px 0 15px; }
+    .evidence-timeline { border-left: 2px solid #dfe7ef; display: grid; gap: 14px; margin-left: 4px; padding-left: 17px; }
+    .evidence-entry { position: relative; }
+    .evidence-entry::before { background: var(--blue); border: 3px solid #fff; border-radius: 50%; content: ""; height: 6px; left: -23px; position: absolute; top: 2px; width: 6px; }
+    .evidence-entry.override { background: var(--red-soft); border: 1px solid #efb7bc; border-left: 4px solid var(--red); border-radius: 4px; padding: 8px 9px; }
+    .evidence-entry.override::before { background: var(--red); left: -27px; }
+    .evidence-entry.override .evidence-meta { color: var(--red); font-weight: 700; }
+    .evidence-entry.resolved::before { background: var(--green); }
+    .evidence-meta { color: var(--muted); font-size: 10px; }
+    .evidence-action { color: #33465e; font-size: 12px; line-height: 1.4; margin-top: 3px; }
+    .help-button { background: transparent; border: 1px solid #63809f; border-radius: 5px; color: #dbe7f3; cursor: pointer; font-size: 11px; font-weight: 700; margin-top: 17px; padding: 7px 10px; }
+    .help-button:hover { background: #183254; }
+    .help-modal { align-items: center; background: rgba(11, 26, 47, .5); display: none; inset: 0; justify-content: center; padding: 20px; position: fixed; z-index: 10; }
+    .help-modal.visible { display: flex; }
+    .help-dialog { background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 18px 45px rgba(10, 26, 48, .25); max-width: 470px; padding: 24px; width: 100%; }
+    .help-dialog h2 { margin-bottom: 9px; }
+    .help-dialog p { color: #445871; font-size: 13px; line-height: 1.55; margin-bottom: 18px; }
+    .help-dialog .action-button { cursor: pointer; }
+    .controls-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .control-card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; transition: border-color .2s, box-shadow .2s, transform .2s; }
+    .control-card.filtered-out { display: none; }
+    .control-card:hover { border-color: #aec4da; transform: translateY(-2px); }
+    .control-card.open { border-color: #7e9dbe; box-shadow: 0 14px 35px rgba(17, 38, 67, .12); }
+    .card-head { display: grid; grid-template-columns: 1fr auto; gap: 14px; padding: 20px 20px 16px; cursor: pointer; }
+    .control-id { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .12em; margin-bottom: 8px; }
+    .control-name { font-family: "Space Grotesk", sans-serif; font-size: 18px; line-height: 1.2; margin: 0; }
+    .status-stack { text-align: right; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 99px; padding: 5px 9px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .badge.critical, .badge.failed { color: var(--red); background: var(--red-soft); }
+    .badge.high, .badge.overdue { color: #9a6815; background: var(--amber-soft); }
+    .badge.low, .badge.compliant { color: var(--green); background: var(--green-soft); }
+    .badge.medium, .badge.at-risk { color: #9a6815; background: var(--amber-soft); }
+    .risk-label { color: var(--muted); display: block; font-size: 10px; margin-top: 7px; }
+    .card-overview { border-top: 1px solid #edf1f5; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); padding: 14px 20px 18px; gap: 16px; }
+    .card-overview > div { min-width: 0; }
+    .data-label { color: var(--muted); display: block; font-size: 10px; font-weight: 700; letter-spacing: .07em; margin-bottom: 4px; text-transform: uppercase; }
+    .data-value { font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+    .expand-cue { color: var(--blue); font-size: 11px; font-weight: 700; text-align: right; padding: 0 20px 15px; }
+    .expand-cue span { display: inline-block; transition: transform .2s; }
+    .control-card.open .expand-cue span { transform: rotate(180deg); }
+
+    .detail-panel { border-top: 1px solid var(--line); background: #fbfcfe; display: none; padding: 22px 20px 24px; animation: reveal .25s ease both; }
+    .control-card.open .detail-panel { display: block; }
+    @keyframes reveal { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    .detail-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 28px; }
+    .detail-title { font-size: 12px; font-weight: 700; margin-bottom: 13px; }
+    .field-list { display: grid; grid-template-columns: 1fr 1fr; gap: 13px 20px; }
+    .field.full { grid-column: 1 / -1; }
+    .field .data-value { color: #32445c; }
+    .path-wrap { padding-top: 1px; }
+    .path { display: flex; align-items: flex-start; justify-content: space-between; position: relative; margin-top: 24px; }
+    .path::before { content: ""; height: 2px; background: #d8e1eb; position: absolute; left: 12px; right: 12px; top: 10px; }
+    .path-step { color: #9aa8b9; font-size: 10px; font-weight: 700; max-width: 70px; position: relative; text-align: center; z-index: 1; }
+    .path-dot { width: 21px; height: 21px; background: #d8e1eb; border: 4px solid #fbfcfe; border-radius: 50%; display: block; margin: 0 auto 8px; }
+    .path-step.active { color: var(--blue); }
+    .path-step.active .path-dot { background: var(--blue); box-shadow: 0 0 0 4px var(--blue-soft); }
+    .path-step.past { color: var(--green); }
+    .path-step.past .path-dot { background: var(--green); }
+    .path-step.current { color: var(--red); }
+    .path-step.current .path-dot { background: var(--red); box-shadow: 0 0 0 4px var(--red-soft); }
+    .audit-title { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; }
+    .audit-list { border-left: 2px solid #dfe7ef; margin: 14px 0 0 4px; padding-left: 15px; display: grid; gap: 13px; }
+    .audit-entry { position: relative; }
+    .audit-entry::before { content: ""; position: absolute; width: 6px; height: 6px; background: var(--blue); border: 3px solid #fbfcfe; border-radius: 50%; left: -20px; top: 3px; }
+    .audit-entry.resolved { border-left: 3px solid var(--green); padding-left: 9px; }
+    .audit-entry.resolved::before { background: var(--green); }
+    .audit-entry.override { background: var(--red-soft); border: 1px solid #efb7bc; border-left: 4px solid var(--red); border-radius: 4px; padding: 8px 9px; }
+    .audit-entry.override::before { background: var(--red); left: -24px; }
+    .audit-entry.override .audit-meta { color: var(--red); font-weight: 700; }
+    .manual-override { background: repeating-linear-gradient(135deg, #fff7e6, #fff7e6 5px, #f5e2b8 5px, #f5e2b8 8px); border: 1px solid #b78320; border-radius: 4px; color: #805c16; display: inline-flex; font-size: 9px; font-weight: 800; letter-spacing: .04em; margin-top: 6px; padding: 4px 6px; }
+    .override-display { color: #805c16; display: block; font-size: 10px; font-weight: 700; margin-top: 5px; }
+    .audit-meta { color: var(--muted); font-size: 10px; margin-bottom: 3px; }
+    .audit-action { color: #33465e; font-size: 12px; }
+    .internal-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+    .internal-actions > .action-button { flex: 1 1 100%; }
+    .action-form { background: #f7f9fc; border: 1px solid var(--line); border-radius: 5px; display: grid; gap: 9px; margin-top: 12px; padding: 12px; }
+    .action-form.warning { border-color: #edc985; }
+    .action-form label { color: var(--muted); display: grid; font-size: 10px; font-weight: 700; gap: 4px; }
+    .action-form input, .action-form select { border: 1px solid #cbd8e5; border-radius: 4px; color: var(--ink); font: inherit; font-size: 11px; padding: 8px; }
+    .action-form input:focus, .action-form select:focus { border-color: var(--blue); outline: 2px solid var(--blue-soft); }
+    .action-warning { color: var(--red); font-size: 10px; font-weight: 700; line-height: 1.4; margin: 0; }
+    .form-actions { display: flex; gap: 7px; }
+    .action-button.confirm { background: var(--green); color: #fff; }
+    .action-button.cancel { background: #e9eef5; }
+    .action-button { border: 0; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 700; transition: .2s ease; }
+    .action-button { background: #e9eef5; color: #445871; padding: 8px 10px; }
+    .action-button:hover { background: #dce6f0; }
+    .regulator-view .internal-actions { display: none; }
+    .empty-note { color: var(--muted); font-size: 12px; }
+
+    .footer { border-top: 1px solid var(--line); background: #fff; color: var(--muted); font-size: 11px; padding: 17px clamp(20px, 5vw, 72px); }
+    .toast { position: fixed; z-index: 5; bottom: 24px; right: 24px; max-width: 390px; background: var(--navy); color: #fff; border-left: 4px solid #e16a73; border-radius: 5px; box-shadow: 0 12px 35px rgba(10, 26, 48, .28); padding: 15px 18px; font-size: 12px; line-height: 1.45; transform: translateY(25px); opacity: 0; pointer-events: none; transition: .3s ease; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast strong { display: block; color: #ffb3b8; font-size: 11px; letter-spacing: .05em; margin-bottom: 3px; text-transform: uppercase; }
+
+    @media (max-width: 850px) {
+      .topbar-inner, .summary-row { display: block; }
+      .view-toggle { margin-top: 22px; }
+      .summary-metrics { margin-top: 22px; }
+      .controls-grid, .detail-grid, .simulation-body { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .content { padding-top: 26px; }
+      .summary-metrics { gap: 14px; justify-content: space-between; }
+      .metric { padding-left: 10px; }
+      .metric-value { font-size: 21px; }
+      .card-head { padding: 17px 15px 14px; }
+      .card-overview { padding: 13px 15px 16px; grid-template-columns: 1fr 1fr; }
+      .card-overview > :last-child { grid-column: 1 / -1; }
+      .expand-cue { padding-right: 15px; }
+      .detail-panel { padding: 19px 15px; }
+      .simulation-head, .simulation-body { padding-left: 15px; padding-right: 15px; }
+      .simulation-head { align-items: flex-start; display: block; }
+      .simulation-live { display: inline-block; margin-top: 12px; }
+      .scenario-steps { padding-left: 8px; padding-right: 8px; }
+      .field-list { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+      .toast { left: 18px; right: 18px; bottom: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div>
+          <p class="eyebrow">Enterprise AML Governance / Control Room</p>
+          <h1>AML GRC Control Monitoring &amp; Risk Escalation Platform</h1>
+          <p class="subtitle">A governance oversight layer for verifying that anti-money laundering controls are operating, evidenced, and escalated when risk thresholds are breached.</p>
+        </div>
+        <div class="view-toggle">
+          <label class="toggle-label" for="regulatorToggle">
+            <input id="regulatorToggle" type="checkbox">
+            <span class="switch" aria-hidden="true"></span>
+            <span>Bank Internal View / Regulator View</span>
+          </label>
+          <p class="mode-copy" id="modeCopy">Bank Internal View · controlled access</p>
+          <p class="mode-copy">Internal view shows available actions; regulator view keeps the same status fields but disables override and resolve actions.</p>
+          <button class="help-button" id="helpButton" type="button" aria-label="Open How this works help">? How this works</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="regulator-banner" id="regulatorBanner">Read-only regulator view — all data is system-derived and cannot be edited by bank personnel.</div>
+
+    <main class="content">
+      <section aria-labelledby="dashboardTitle">
+        <div class="summary-row">
+          <div>
+            <h2 id="dashboardTitle">Control health overview</h2>
+            <p class="section-intro">Four high-priority obligations mapped to accountable owners and live escalation paths.</p>
+          </div>
+          <div class="summary-metrics" aria-label="Dashboard summary">
+            <div class="metric alert"><span class="metric-value" id="criticalCount">3</span><span class="metric-label">Critical controls</span></div>
+            <div class="metric"><span class="metric-value" id="openCount">4</span><span class="metric-label">Open exceptions</span></div>
+            <div class="metric"><span class="metric-value">Q3 ’26</span><span class="metric-label">Evidence cycle</span></div>
+          </div>
+        </div>
+        <section class="portfolio-panel" aria-labelledby="portfolioTitle">
+          <h2 id="portfolioTitle">Portfolio Risk Overview</h2>
+          <div class="portfolio-grid">
+            <div class="chart-block"><p class="chart-title">Controls by current status</p><div class="donut-wrap"><div class="donut"><svg viewBox="0 0 42 42" aria-label="Control status distribution"><circle cx="21" cy="21" r="15.9" stroke="#e9f7f1" id="donutCompliant"></circle><circle cx="21" cy="21" r="15.9" stroke="#fff7e6" id="donutAtRisk"></circle><circle cx="21" cy="21" r="15.9" stroke="#fff0f1" id="donutFailed"></circle><circle cx="21" cy="21" r="15.9" stroke="#f4ead0" id="donutOverdue"></circle></svg><div class="donut-hole"><strong id="donutTotal">4</strong><span>controls</span></div></div><div class="chart-legend"><div class="legend-item"><i style="background:var(--green)"></i>Compliant <strong id="legendCompliant">0</strong></div><div class="legend-item"><i style="background:var(--amber)"></i>At Risk <strong id="legendAtRisk">0</strong></div><div class="legend-item"><i style="background:var(--red)"></i>Failed <strong id="legendFailed">0</strong></div><div class="legend-item"><i style="background:#b78320"></i>Overdue <strong id="legendOverdue">0</strong></div></div></div></div>
+            <div class="chart-block"><p class="chart-title">Transaction Monitoring Coverage %</p><p class="trend-caption">Six-quarter trend · decay surfaced before correction</p><svg class="trend-chart" viewBox="0 0 520 128" preserveAspectRatio="none" aria-label="Coverage trend over six quarters"><path d="M10 14H510 M10 57H510 M10 100H510" stroke="#e7edf4" fill="none"/><path id="trendArea" d="" fill="#edf4fc"/><path id="trendLine" d="" fill="none" stroke="#3875bd" stroke-width="3"/><g id="trendPoints"></g></svg><div class="trend-labels"><span>Q2 ’25</span><span>Q3 ’25</span><span>Q4 ’25</span><span>Q1 ’26</span><span>Q2 ’26</span><span>Q3 ’26</span></div></div>
+          </div>
+        </section>
+        <div class="section-tab register-tab"><span>①</span> Control Register</div>
+        <div class="filter-bar" aria-label="Control register filters">
+          <div><span class="filter-label">Risk level</span><div class="filter-group" id="riskFilters"></div></div>
+          <div><span class="filter-label">Status</span><div class="filter-group" id="statusFilters"></div></div>
+          <div><span class="filter-label">Owner</span><select class="owner-filter" id="ownerFilter"><option value="All">All owners</option></select></div>
+          <p class="filter-count" id="filterCount"></p>
+        </div>
+        <div class="register-layout">
+          <div class="controls-grid" id="controlsGrid"></div>
+          <details class="alerts-panel" open><summary class="alerts-heading"><h3 id="alertsTitle">Active Alerts</h3><span class="alert-count" id="alertCount">0</span></summary><div id="alertsList"></div></details>
+        </div>
+          <div class="section-tab simulation-tab"><span>②</span> Scenario Simulation</div>
+          <section class="simulation-panel" aria-labelledby="simulationTitle">
+            <div class="simulation-head">
+              <div>
+                <p class="simulation-kicker">⚠ TESTING HARNESS — NOT PART OF PRODUCTION SYSTEM</p>
+                <h2 class="simulation-title" id="simulationTitle">Simulated control room</h2>
+                <p class="simulation-subtitle">Move through daily checks to see healthy evidence, exceptions, and escalation events appear over time.</p>
+              </div>
+              <span class="simulation-live">SIMULATED / NO BACKEND</span>
+            </div>
+            <p class="simulation-disclaimer"><strong>DEMO CONSOLE / SYNTHETIC INPUTS</strong>This panel simulates time-series data changes for demonstration purposes. In a live deployment, control status would update automatically from real data feeds — no manual scenario controls would exist.</p>
+            <ol class="scenario-steps" id="scenarioSteps" aria-label="Scenario progress">
+              <li class="scenario-step current">① Baseline</li>
+              <li class="scenario-step">② Decay detected</li>
+              <li class="scenario-step">③ Threshold breached</li>
+              <li class="scenario-step">④ Escalated</li>
+              <li class="scenario-step">⑤ Regulator notified</li>
+            </ol>
+            <div class="simulation-body">
+              <div>
+                <div class="simulation-controls">
+                  <div class="sim-day"><strong id="simDay">Day 1 · Baseline</strong><span id="simDate">01 Oct 2026</span></div>
+                  <button class="sim-button unhappy" id="unhappyFlowButton" type="button">Start scenario: TD Bank control decay</button>
+                  <button class="sim-button primary" id="happyFlowButton" type="button">Start scenario: Remediation to compliant</button>
+                  <button class="sim-button" id="pauseScenarioButton" type="button" disabled>Play scenario</button>
+                  <button class="sim-button" id="resetSimulationButton" type="button">Reset to baseline</button>
+                </div>
+                <div class="simulation-state"><strong id="simulationStateTitle">Case-study baseline</strong><p id="simulationStateCopy">The dashboard is showing the four simulated TD AML control failures as initially recorded.</p></div>
+                <div class="simulation-caption" id="simulationCaption" role="status" aria-live="polite"></div>
+              </div>
+              <div>
+                <div class="activity-title"><strong>Daily activity</strong><span>Newest first</span></div>
+                <div class="activity-feed" id="activityFeed"></div>
+              </div>
+            </div>
+          </section>
+          <div class="section-tab evidence-tab"><span>③</span> Audit &amp; Evidence Trail</div>
+          <section class="evidence-section" aria-labelledby="evidenceTitle">
+            <h2 class="simulation-title" id="evidenceTitle">Consolidated evidence view</h2>
+            <p class="evidence-intro">A single reverse-chronological timeline across all four controls, including system-generated scenario events.</p>
+            <div class="evidence-timeline" id="evidenceTimeline"></div>
+          </section>
+      </section>
+    </main>
+
+    <footer class="footer"><div class="footer-inner">Academic prototype using simulated data based on public reporting about TD Bank’s 2024 AML compliance failure. Not a production compliance system.</div></footer>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"><strong>Automated escalation</strong><span id="toastMessage"></span></div>
+  <div class="help-modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="help-dialog">
+      <h2 id="helpTitle">How this works</h2>
+      <p>This dashboard is a governance oversight layer for AML controls, not transaction monitoring. Use Scenario Simulation to autoplay a control decay or remediation story across several days. The Bank/Regulator toggle changes who can see internal actions. Each card shows the obligation, owner, required level, current level, evidence, risk, status, escalation stage, and audit history.</p>
+      <button class="action-button" id="closeHelpButton" type="button">Close help</button>
+    </div>
+  </div>
+
+  <script>
+    const escalationPath = ["AML Officer", "CRO", "Risk Committee", "Board"];
+    const controls = [
+      {
+        id: "AML-001",
+        obligation: "Transaction Monitoring Coverage",
+        requiredControl: "Transaction monitoring must cover the full in-scope customer and transaction population.",
+        controlOwner: "AML Compliance",
+        requiredLevel: "100% coverage",
+        currentLevel: "100% coverage verified",
+        lastTested: "30 Sep 2026",
+        evidence: "Transaction Monitoring Report Q3 2026",
+        riskLevel: "Critical",
+        status: "Compliant",
+        escalationPath,
+        escalationStage: -1,
+        auditTrail: [
+          { timestamp: "15 Oct 2026 · 09:14", actor: "System monitor", action: "Coverage variance detected: 92 percentage points below required level." },
+          { timestamp: "30 Sep 2026 · 16:40", actor: "AML Compliance", action: "Quarterly control test completed; material coverage gap recorded." },
+          { timestamp: "02 Aug 2026 · 11:05", actor: "AML Officer", action: "Evidence pack submitted for Q3 oversight review." }
+        ]
+      },
+      {
+        id: "AML-002",
+        obligation: "Monitoring Scenario Currency",
+        requiredControl: "Detection scenarios must be reviewed at least annually against current typologies and products.",
+        controlOwner: "Financial Crime Technology",
+        requiredLevel: "Annual review",
+        currentLevel: "Last updated 2014, no changes through 2022",
+        lastTested: "28 Sep 2026",
+        evidence: "Scenario Inventory & Review Attestation",
+        riskLevel: "Critical",
+        status: "Failed",
+        escalationPath,
+        escalationStage: 2,
+        auditTrail: [
+          { timestamp: "28 Sep 2026 · 14:22", actor: "System monitor", action: "Scenario currency test failed; review age exceeds policy tolerance." },
+          { timestamp: "12 Sep 2026 · 10:18", actor: "Financial Crime Technology", action: "Scenario inventory reconciled; legacy rules remain unchanged." },
+          { timestamp: "18 Jul 2026 · 09:30", actor: "AML Officer", action: "Annual review evidence request issued to control owner." }
+        ]
+      },
+      {
+        id: "AML-003",
+        obligation: "New Product AML Readiness",
+        requiredControl: "A signed-off AML risk assessment is required before any product launch.",
+        controlOwner: "Product Governance",
+        requiredLevel: "Signed-off AML risk assessment pre-launch",
+        currentLevel: "AML assessment signed off pre-launch",
+        lastTested: "25 Sep 2026",
+        evidence: "New Product Approval Gate Register",
+        riskLevel: "Critical",
+        status: "Compliant",
+        escalationPath,
+        escalationStage: -1,
+        auditTrail: [
+          { timestamp: "25 Sep 2026 · 13:10", actor: "Product Governance", action: "Pre-launch control test failed; approval gate evidence incomplete." },
+          { timestamp: "08 Sep 2026 · 15:45", actor: "Risk Committee", action: "Product readiness exception noted in committee minutes." },
+          { timestamp: "11 Aug 2026 · 12:06", actor: "System monitor", action: "Launch record matched without a corresponding signed AML assessment." }
+        ]
+      },
+      {
+        id: "AML-004",
+        obligation: "Audit/Regulatory Finding Remediation",
+        requiredControl: "Audit and regulatory findings must be remediated, evidenced, and closed within the agreed SLA.",
+        controlOwner: "Enterprise Risk",
+        requiredLevel: "Remediation within 90 days",
+        currentLevel: "Multiple findings open 180+ days",
+        lastTested: "01 Oct 2026",
+        evidence: "Issue Management Aging Report",
+        riskLevel: "High",
+        status: "Overdue",
+        escalationPath,
+        escalationStage: 1,
+        auditTrail: [
+          { timestamp: "01 Oct 2026 · 17:05", actor: "Enterprise Risk", action: "Aging test identified multiple findings beyond the 90-day remediation SLA." },
+          { timestamp: "15 Sep 2026 · 09:42", actor: "CRO", action: "Owner action plans requested for all findings aged over 180 days." },
+          { timestamp: "04 Aug 2026 · 16:12", actor: "Internal Audit", action: "Follow-up review recorded insufficient closure evidence." }
+        ]
+      }
+    ];
+
+    const grid = document.getElementById("controlsGrid");
+    const toggle = document.getElementById("regulatorToggle");
+    const baselineControls = JSON.parse(JSON.stringify(controls));
+    const simulationStart = new Date("2026-10-01T09:00:00");
+    const scenarioLabels = {
+      decay: ["① Baseline", "② Decay detected", "③ Threshold breached", "④ Escalated", "⑤ Regulator notified"],
+      recovery: ["① Baseline", "② Evidence restored", "③ Controls tested", "④ Compliant", "⑤ Regulator view ready"]
+    };
+    let simulationDay = 1;
+    let simulationMode = "baseline";
+    let scenarioKind = "decay";
+    let scenarioStep = 0;
+    let scenarioTimer = null;
+    let scenarioPaused = false;
+    let scenarioRunning = false;
+    let activityLog = [
+      { day: 1, tone: "", action: "Daily control health snapshot loaded from the case-study baseline." }
+    ];
+    let openControlId = null;
+    let activeRisk = "All";
+    let activeStatus = "All";
+    let activeOwner = "All";
+    let activeAction = null;
+
+    function slug(value) { return value.toLowerCase().replaceAll(" ", "-"); }
+    function escapeHtml(value) { return String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[character]); }
+    function actionForm(control) {
+      if (!activeAction || activeAction.id !== control.id) return "";
+      if (activeAction.type === "resolve") return `<form class="action-form" data-action-form="resolve" data-control-id="${control.id}">
+        <label>Remediation evidence (describe corrective action taken)<input name="remediationEvidence" type="text" required></label>
+        <label>Evidence reference<input name="evidenceReference" type="text" placeholder="Document name or ID" required></label>
+        <div class="form-actions"><button class="action-button confirm" type="submit">Confirm resolution</button><button class="action-button cancel" type="button" data-action="cancel-action">Cancel</button></div>
+      </form>`;
+      return `<form class="action-form warning" data-action-form="override" data-control-id="${control.id}">
+        <label>Justification for override (mandatory)<input name="justification" type="text" required></label>
+        <label>Override to status:<select name="overriddenStatus"><option>Compliant</option><option>At Risk</option></select></label>
+        <p class="action-warning">This action does not change the underlying system-derived metric. The override will be permanently logged and remains visible to regulators.</p>
+        <div class="form-actions"><button class="action-button confirm" type="submit">Confirm override</button><button class="action-button cancel" type="button" data-action="cancel-action">Cancel</button></div>
+      </form>`;
+    }
+    function simulatedAuditTimestamp() { return `${formatSimulationDate()} · 09:00 · system-generated`; }
+    function renderFilters() {
+      const risks = ["All", "Critical", "High", "Medium", "Low"];
+      const statuses = ["All", "Compliant", "At Risk", "Failed", "Overdue"];
+      const buttons = (items, active, target, setter) => { document.getElementById(target).innerHTML = items.map((item) => `<button class="filter-button ${item === active ? "active" : ""}" type="button" data-filter="${setter}" data-value="${item}">${item}</button>`).join(""); };
+      buttons(risks, activeRisk, "riskFilters", "risk");
+      buttons(statuses, activeStatus, "statusFilters", "status");
+      const owners = [...new Set(controls.map((control) => control.controlOwner))];
+      const ownerSelect = document.getElementById("ownerFilter");
+      ownerSelect.innerHTML = `<option value="All">All owners</option>${owners.map((owner) => `<option value="${owner}">${owner}</option>`).join("")}`;
+      ownerSelect.value = activeOwner;
+      document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => { if (button.dataset.filter === "risk") activeRisk = button.dataset.value; else activeStatus = button.dataset.value; render(); }));
+      ownerSelect.onchange = () => { activeOwner = ownerSelect.value; render(); };
+    }
+    function renderAnalytics() {
+      const statuses = ["Compliant", "At Risk", "Failed", "Overdue"];
+      const counts = statuses.map((status) => controls.filter((control) => control.status === status).length);
+      let offset = 0;
+      statuses.forEach((status, index) => { const circle = document.getElementById(`donut${status.replace(" ", "")}`); const share = counts[index] / controls.length * 100; circle.style.strokeDasharray = `${share} ${100 - share}`; circle.style.strokeDashoffset = -offset; offset += share; document.getElementById(`legend${status.replace(" ", "")}`).textContent = counts[index]; });
+      document.getElementById("donutTotal").textContent = controls.length;
+      const values = [92, 83, 76, 68, 41, controls[0].status === "Compliant" ? 96 : controls[0].status === "At Risk" ? 72 : 8];
+      const points = values.map((value, index) => [10 + index * 100, 100 - value * .86]);
+      const path = points.map(([x, y], index) => `${index ? "L" : "M"}${x} ${y}`).join(" ");
+      document.getElementById("trendLine").setAttribute("d", path);
+      document.getElementById("trendArea").setAttribute("d", `${path} L510 112 L10 112 Z`);
+      document.getElementById("trendPoints").innerHTML = points.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.5" fill="#fff" stroke="#3875bd" stroke-width="2"/>`).join("");
+    }
+    function renderAlerts() {
+      const alerts = [];
+      const overdue = controls.filter((control) => control.status === "Overdue").length;
+      const failed = controls.filter((control) => control.status === "Failed").length;
+      const atRisk = controls.filter((control) => control.status === "At Risk").length;
+      if (overdue) alerts.push({ text: `${overdue} control${overdue > 1 ? "s" : ""} overdue for testing`, tone: "" });
+      if (failed && scenarioKind === "decay" && scenarioStep >= 2) alerts.push({ text: "1 new escalation this scenario period", tone: "critical" });
+      if (atRisk) alerts.push({ text: `${atRisk} finding${atRisk > 1 ? "s" : ""} approaching SLA deadline`, tone: "" });
+      document.getElementById("alertCount").textContent = alerts.length;
+      document.getElementById("alertsList").innerHTML = alerts.length ? alerts.map((alert) => `<div class="alert-item ${alert.tone}">${alert.text}</div>`).join("") : `<p class="empty-note">No active alerts. Current control evidence is within tolerance.</p>`;
+    }
+    function render() {
+      const visibleControls = controls.filter((control) => (activeRisk === "All" || control.riskLevel === activeRisk) && (activeStatus === "All" || control.status === activeStatus) && (activeOwner === "All" || control.controlOwner === activeOwner));
+      grid.innerHTML = controls.map((control) => {
+        const isOpen = control.id === openControlId;
+        const detailFields = [
+          ["Control ID", control.id, false],
+          ["Obligation", control.obligation, false],
+          ["Control owner", control.controlOwner, false],
+          ["Last tested", control.lastTested, false],
+          ["Required control", control.requiredControl, true],
+          ["Required level", control.requiredLevel, false],
+          ["Current level", control.currentLevel, false],
+          ["Evidence source", control.evidence, false],
+          ["Risk level", control.riskLevel, false],
+          ["Status", control.status, false]
+        ];
+        const audit = control.auditTrail.map((entry) => `<div class="audit-entry ${entry.tone || ""}"><div class="audit-meta">${entry.tone === "override" ? "OVERRIDE · " : ""}${entry.timestamp} · ${entry.actor}</div><div class="audit-action">${entry.action}</div></div>`).join("");
+        const path = control.escalationPath.map((stage, index) => {
+          let state = index < control.escalationStage ? "past" : index === control.escalationStage ? "current" : "";
+          return `<div class="path-step ${state}"><span class="path-dot"></span>${stage}</div>`;
+        }).join("");
+        const isVisible = visibleControls.includes(control);
+        return `<article class="control-card ${isOpen ? "open" : ""} ${isVisible ? "" : "filtered-out"}" data-id="${control.id}">
+          <div class="card-head" data-action="toggle" role="button" tabindex="0" aria-expanded="${isOpen}">
+            <div><div class="control-id">${control.id}</div><h3 class="control-name">${control.obligation}</h3></div>
+            <div class="status-stack"><span class="badge ${slug(control.riskLevel)}">${control.riskLevel}</span><span class="risk-label">Risk classification</span></div>
+          </div>
+          <div class="card-overview">
+            <div><span class="data-label">Current level</span><span class="data-value">${control.currentLevel}</span></div>
+            <div><span class="data-label">Status</span><span class="badge ${slug(control.status)}">${control.status}</span>${control.manualOverride ? `<span class="override-display">Displayed as ${escapeHtml(control.manualOverride.overriddenStatus)}</span><span class="manual-override">MANUALLY OVERRIDDEN</span>` : ""}</div>
+            <div><span class="data-label">Owner</span><span class="data-value">${control.controlOwner}</span></div>
+          </div>
+          <div class="expand-cue" data-action="toggle" role="button" tabindex="0" aria-expanded="${isOpen}">View control detail <span>⌄</span></div>
+          <div class="detail-panel">
+            <div class="detail-grid">
+              <div><div class="detail-title">Control record</div><div class="field-list">${detailFields.map(([label, value, full]) => `<div class="field ${full ? "full" : ""}"><span class="data-label">${label}</span><span class="data-value">${value}</span></div>`).join("")}</div></div>
+              <div class="path-wrap"><div class="detail-title">Escalation path · stage ${control.escalationStage + 1} of ${control.escalationPath.length}</div><div class="path">${path}</div><div class="audit-title"><div class="detail-title" style="margin:0">Audit trail</div><span class="empty-note">System logged</span></div><div class="audit-list">${audit}</div><div class="internal-actions"><button class="action-button" data-action="override" data-control-id="${control.id}">Override status</button><button class="action-button" data-action="resolve" data-control-id="${control.id}">Resolve finding</button>${actionForm(control)}</div></div>
+            </div>
+          </div>
+        </article>`;
+      }).join("");
+      document.getElementById("filterCount").textContent = `Showing ${visibleControls.length} of ${controls.length} controls`;
+      document.getElementById("criticalCount").textContent = controls.filter((control) => control.riskLevel === "Critical").length;
+      document.getElementById("openCount").textContent = controls.filter((control) => control.status !== "Compliant").length;
+      renderFilters();
+      renderAnalytics();
+      renderAlerts();
+      renderSimulation();
+      renderEvidence();
+      document.querySelectorAll("[data-action='toggle']").forEach((element) => {
+        element.addEventListener("click", () => { openControlId = element.closest(".control-card").dataset.id === openControlId ? null : element.closest(".control-card").dataset.id; render(); });
+        element.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); element.click(); } });
+      });
+      document.querySelectorAll("[data-action='override'], [data-action='resolve']").forEach((button) => button.addEventListener("click", () => { activeAction = { id: button.dataset.controlId, type: button.dataset.action }; openControlId = button.dataset.controlId; render(); }));
+      document.querySelectorAll("[data-action='cancel-action']").forEach((button) => button.addEventListener("click", () => { activeAction = null; render(); }));
+      document.querySelectorAll("[data-action-form]").forEach((form) => form.addEventListener("submit", (event) => { event.preventDefault(); handleActionSubmit(form); }));
+    }
+
+    function formatSimulationDate() {
+      return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(simulationStart.getTime() + (simulationDay - 1) * 86400000));
+    }
+
+    function renderSimulation() {
+      const modeLabels = { baseline: "Baseline", decay: "Control decay in progress", recovery: "Remediation in progress" };
+      const modeCopy = {
+        baseline: "The dashboard is showing a mixed baseline: one pre-existing failed scenario control, one overdue finding, and two controls within tolerance.",
+        decay: "The system is progressing through a control decay story; changes are system-derived and automatically logged.",
+        recovery: "The system is progressing through a remediation story; evidence is being accepted as controls return to tolerance."
+      };
+      document.getElementById("simDay").textContent = `Day ${simulationDay} · ${modeLabels[simulationMode]}`;
+      document.getElementById("simDate").textContent = formatSimulationDate();
+      document.getElementById("simulationStateTitle").textContent = modeLabels[simulationMode];
+      document.getElementById("simulationStateCopy").textContent = modeCopy[simulationMode];
+      document.querySelectorAll("#scenarioSteps .scenario-step").forEach((step, index) => {
+        step.textContent = (scenarioLabels[scenarioKind] || scenarioLabels.decay)[index];
+        step.className = `scenario-step ${index === scenarioStep ? "current" : index < scenarioStep ? "complete" : ""}`;
+      });
+      document.getElementById("activityFeed").innerHTML = activityLog.slice(0, 5).map((entry) => `<div class="activity-entry ${entry.tone}"><div class="activity-meta">Day ${entry.day} · ${entry.tone === "good" ? "Passed" : entry.tone === "bad" ? "Exception" : "System"}</div><div class="activity-action">${entry.action}</div></div>`).join("");
+    }
+
+    function renderEvidence() {
+      const evidence = controls.flatMap((control) => control.auditTrail.map((entry) => ({ ...entry, control: `${control.id} · ${control.obligation}` }))).sort((a, b) => {
+        const parseDate = (value) => new Date(`${value.split(" · ")[0]} ${value.split(" · ")[1] || "00:00"}`).getTime();
+        return (b.createdAt || parseDate(b.timestamp)) - (a.createdAt || parseDate(a.timestamp));
+      });
+      document.getElementById("evidenceTimeline").innerHTML = evidence.slice(0, 20).map((entry) => `<div class="evidence-entry ${entry.tone || ""}"><div class="evidence-meta">${entry.tone === "override" ? "OVERRIDE · " : ""}${entry.timestamp} · ${entry.actor} · ${entry.control}</div><div class="evidence-action">${entry.action}</div></div>`).join("");
+    }
+
+    function handleActionSubmit(form) {
+      const control = controls.find((item) => item.id === form.dataset.controlId);
+      if (!control) return;
+      const values = Object.fromEntries(new FormData(form).entries());
+      if (form.dataset.actionForm === "resolve") {
+        const remediationEvidence = String(values.remediationEvidence || "").trim();
+        const evidenceReference = String(values.evidenceReference || "").trim();
+        if (!remediationEvidence || !evidenceReference) return;
+        control.currentLevel = control.requiredLevel;
+        control.status = "Compliant";
+        control.riskLevel = "Low";
+        control.escalationStage = -1;
+        control.auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), createdAt: Date.now(), actor: control.controlOwner, tone: "resolved", action: `Finding resolved. Evidence: ${escapeHtml(evidenceReference)} — ${escapeHtml(remediationEvidence)}` });
+        activityLog.unshift({ day: simulationDay, tone: "good", action: `${control.id} resolved with evidence reference ${evidenceReference}.` });
+        showSimulationCaption("✓ Finding resolved — evidence is now permanently logged", "good");
+      } else {
+        const justification = String(values.justification || "").trim();
+        const overriddenStatus = String(values.overriddenStatus || "");
+        if (!justification) return;
+        control.manualOverride = { overriddenStatus, justification: escapeHtml(justification), overriddenBy: control.controlOwner, timestamp: simulatedAuditTimestamp() };
+        control.auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), createdAt: Date.now(), actor: control.controlOwner, tone: "override", action: `MANUAL OVERRIDE — status displayed as ${escapeHtml(overriddenStatus)}. Underlying metric unchanged (still: ${escapeHtml(control.currentLevel)}). Justification: ${escapeHtml(justification)}.` });
+        activityLog.unshift({ day: simulationDay, tone: "bad", action: `${control.id} manually overridden to ${overriddenStatus}; underlying metric unchanged.` });
+        showSimulationCaption("! Manual override logged — visible to regulators", "bad");
+      }
+      activeAction = null;
+      openControlId = control.id;
+      render();
+    }
+
+    function showSimulationCaption(message, tone) {
+      const caption = document.getElementById("simulationCaption");
+      caption.textContent = message;
+      caption.className = `simulation-caption visible ${tone || ""}`;
+      window.clearTimeout(showSimulationCaption.timer);
+      showSimulationCaption.timer = window.setTimeout(() => caption.classList.remove("visible"), 3800);
+    }
+
+    function restoreBaseline() {
+      window.clearTimeout(scenarioTimer);
+      controls.splice(0, controls.length, ...JSON.parse(JSON.stringify(baselineControls)));
+      simulationDay = 1;
+      simulationMode = "baseline";
+      scenarioKind = "decay";
+      scenarioStep = 0;
+      scenarioPaused = false;
+      scenarioRunning = false;
+      activityLog = [{ day: 1, tone: "", action: "Daily control health snapshot loaded from the case-study baseline." }];
+      openControlId = null;
+      render();
+      updateScenarioButton();
+    }
+
+    function updateScenarioButton() {
+      const button = document.getElementById("pauseScenarioButton");
+      button.disabled = !scenarioRunning;
+      button.textContent = scenarioPaused || !scenarioRunning ? "Play scenario" : "Pause scenario";
+    }
+
+    function applyScenarioStep(step) {
+      const control = controls[0];
+      simulationMode = scenarioKind;
+      simulationDay = step + 1;
+      scenarioStep = step;
+      if (scenarioKind === "decay") {
+        if (step === 1) {
+          control.status = "At Risk";
+          control.currentLevel = "72% coverage and falling";
+          control.auditTrail.unshift({ timestamp: "02 Oct 2026 · system-generated", actor: "Automated control monitor", action: "Coverage trend crossed the early-warning threshold." });
+          activityLog.unshift({ day: simulationDay, tone: "bad", action: "Decay detected: transaction monitoring coverage fell below the early-warning threshold." });
+          showSimulationCaption("↓ System-derived value — cannot be manually edited", "bad");
+        } else if (step === 2) {
+          control.status = "Failed";
+          control.currentLevel = "8% coverage";
+          control.escalationStage = Math.min(control.escalationStage + 1, control.escalationPath.length - 1);
+          control.auditTrail.unshift({ timestamp: "03 Oct 2026 · system-generated", actor: "Automated control monitor", action: "Critical coverage threshold breached." });
+          activityLog.unshift({ day: simulationDay, tone: "bad", action: "Critical threshold breached; status changed from At Risk to Failed." });
+          showSimulationCaption("↓ Threshold breached — status changed automatically", "bad");
+        } else if (step === 3) {
+          control.escalationStage = Math.min(control.escalationStage + 1, control.escalationPath.length - 1);
+          control.auditTrail.unshift({ timestamp: "04 Oct 2026 · system-generated", actor: "Automated control monitor", action: `Risk auto-escalated to ${control.escalationPath[control.escalationStage]}.` });
+          activityLog.unshift({ day: simulationDay, tone: "bad", action: `Auto-escalated to ${control.escalationPath[control.escalationStage]}; no human approval required.` });
+          showSimulationCaption("↑ Auto-escalated — no human approval required", "bad");
+        } else {
+          control.auditTrail.unshift({ timestamp: "05 Oct 2026 · system-generated", actor: "Automated control monitor", action: "Regulator notification triggered from the escalation rule." });
+          activityLog.unshift({ day: simulationDay, tone: "bad", action: "Regulator notification triggered; evidence preserved in the audit trail." });
+          showSimulationCaption("! Regulator notification triggered by rule", "bad");
+        }
+      } else if (step === 1) {
+        controls[3].status = "At Risk";
+        controls[3].riskLevel = "Medium";
+        controls[3].currentLevel = "Remediation evidence under review";
+        activityLog.unshift({ day: simulationDay, tone: "good", action: "Remediation plan accepted; evidence review started." });
+        showSimulationCaption("↑ Evidence received — review is system-tracked", "good");
+      } else if (step === 2) {
+        controls[3].status = "Compliant";
+        controls[3].riskLevel = "Low";
+        controls[3].currentLevel = "Remediated within 90 days";
+        controls[3].escalationStage = -1;
+        controls[3].auditTrail.unshift({ timestamp: "03 Oct 2026 · system-generated", actor: "Automated control monitor", action: "Remediation evidence accepted and finding closed." });
+        activityLog.unshift({ day: simulationDay, tone: "good", action: "Audit finding remediation passed its evidence check." });
+        showSimulationCaption("✓ Evidence accepted — status moved to Compliant", "good");
+      } else if (step === 3) {
+        controls[0].status = "Compliant";
+        controls[0].riskLevel = "Low";
+        controls[0].currentLevel = "100% coverage verified";
+        controls[0].escalationStage = -1;
+        controls[3].status = "Compliant";
+        controls[3].riskLevel = "Low";
+        controls[3].currentLevel = "All findings remediated within 90 days";
+        controls[3].escalationStage = -1;
+        activityLog.unshift({ day: simulationDay, tone: "good", action: "Coverage and finding remediation passed independently; pre-existing scenario currency remains under review." });
+        showSimulationCaption("✓ Remediated controls passed their own thresholds", "good");
+      } else {
+        activityLog.unshift({ day: simulationDay, tone: "good", action: "Regulator-ready evidence view is available with no internal actions required." });
+        showSimulationCaption("✓ Regulator-ready evidence view", "good");
+      }
+      render();
+      updateScenarioButton();
+    }
+
+    function scheduleScenarioStep(delay) {
+      window.clearTimeout(scenarioTimer);
+      scenarioTimer = window.setTimeout(() => {
+        scenarioTimer = null;
+        if (scenarioPaused) return;
+        applyScenarioStep(scenarioStep + 1);
+        if (scenarioStep < 4) scheduleScenarioStep(1500);
+        else scenarioRunning = false;
+        updateScenarioButton();
+      }, delay);
+      updateScenarioButton();
+    }
+
+    function startScenario(kind) {
+      restoreBaseline();
+      scenarioKind = kind;
+      simulationMode = kind;
+      scenarioStep = 0;
+      scenarioPaused = false;
+      scenarioRunning = true;
+      render();
+      showSimulationCaption(kind === "decay" ? "Scenario started — watch system-derived control changes" : "Scenario started — watch evidence restore compliance", kind === "decay" ? "bad" : "good");
+      scheduleScenarioStep(1500);
+    }
+
+    function toggleScenarioPause() {
+      if (!scenarioRunning) return;
+      scenarioPaused = !scenarioPaused;
+      if (scenarioPaused) {
+        window.clearTimeout(scenarioTimer);
+        scenarioTimer = null;
+      } else {
+        scheduleScenarioStep(250);
+      }
+      updateScenarioButton();
+    }
+
+    toggle.addEventListener("change", () => {
+      document.body.classList.toggle("regulator-view", toggle.checked);
+      document.getElementById("regulatorBanner").classList.toggle("visible", toggle.checked);
+      document.getElementById("modeCopy").textContent = toggle.checked ? "Regulator View · strictly read-only" : "Bank Internal View · controlled access";
+    });
+
+    const helpModal = document.getElementById("helpModal");
+    const closeHelp = () => { helpModal.classList.remove("visible"); localStorage.setItem("amlGrcHelpSeen", "true"); };
+    document.getElementById("helpButton").addEventListener("click", () => helpModal.classList.add("visible"));
+    document.getElementById("closeHelpButton").addEventListener("click", closeHelp);
+    helpModal.addEventListener("click", (event) => { if (event.target === helpModal) closeHelp(); });
+    document.addEventListener("keydown", (event) => { if (event.key === "Escape" && helpModal.classList.contains("visible")) closeHelp(); });
+    document.getElementById("unhappyFlowButton").addEventListener("click", () => startScenario("decay"));
+    document.getElementById("happyFlowButton").addEventListener("click", () => startScenario("recovery"));
+    document.getElementById("pauseScenarioButton").addEventListener("click", toggleScenarioPause);
+    document.getElementById("resetSimulationButton").addEventListener("click", restoreBaseline);
+    render();
+    updateScenarioButton();
+    if (!localStorage.getItem("amlGrcHelpSeen")) helpModal.classList.add("visible");
+  </script>
+</body>
+</html>
