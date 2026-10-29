@@ -109,6 +109,7 @@
     .scenario-step { color: #7f91a6; flex: 1 1 0; font-size: 8px; font-weight: 700; min-width: 0; overflow: hidden; padding: 7px 1px 6px; text-align: center; text-overflow: ellipsis; }
     .scenario-step.current { border-bottom: 3px solid #f0bd55; color: #f0bd55; }
     .scenario-step.complete { color: #73c8a5; }
+    .scenario-step.paused { border-bottom: 3px solid #f0bd55; color: #f0bd55; }
     .sim-day { color: #b9c8da; font-size: 10px; grid-column: 1 / -1; }
     .sim-day strong, .sim-day span { display: block; }
     .sim-day strong { font-size: 10px; }
@@ -128,6 +129,7 @@
     .simulation-caption.visible { opacity: 1; }
     .simulation-caption.good { color: #73c8a5; }
     .simulation-caption.bad { color: #ff9ea6; }
+    .simulation-pause-banner { background: #4a3b1d; border: 1px solid #d79625; color: #f6d98d; font-size: 9px; line-height: 1.35; margin: 6px 12px 0; padding: 6px 7px; }
     .portfolio-panel { background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); margin: 0 0 18px; padding: 18px 20px 20px; }
     .portfolio-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 28px; align-items: center; }
     .chart-block { min-width: 0; }
@@ -178,7 +180,31 @@
     .evidence-entry.override { background: var(--red-soft); border: 1px solid #efb7bc; border-left: 4px solid var(--red); border-radius: 4px; padding: 8px 9px; }
     .evidence-entry.override::before { background: var(--red); left: -27px; }
     .evidence-entry.override .evidence-meta { color: var(--red); font-weight: 700; }
+    .evidence-entry.breach { border-left: 3px solid var(--red); padding-left: 9px; }
+    .evidence-entry.breach::before { background: var(--red); }
+    .evidence-entry.breach .evidence-meta { color: var(--red); font-weight: 700; }
+    .evidence-entry.breach .evidence-action { color: #33465e; font-weight: 600; }
+    .evidence-entry.escalation { border-left: 3px solid var(--amber); padding-left: 9px; }
+    .evidence-entry.escalation::before { background: var(--amber); }
+    .evidence-entry.escalation .evidence-meta { color: #9a6815; font-weight: 700; }
+    .evidence-entry.escalation .evidence-action { color: #33465e; font-weight: 700; }
+    .evidence-entry.board { border-left: 4px solid var(--amber); padding-left: 8px; }
+    .evidence-entry.board::before { background: var(--amber); left: -25px; }
+    .evidence-entry.board .evidence-meta { color: #9a6815; font-weight: 700; }
+    .evidence-entry.board .evidence-action { color: #33465e; font-weight: 700; }
+    .evidence-entry.review-accepted { border-left: 3px solid var(--green); padding-left: 9px; }
+    .evidence-entry.review-accepted::before { background: var(--green); }
+    .evidence-entry.review-accepted .evidence-meta { color: var(--green); font-weight: 700; }
+    .evidence-entry.review-rejected { border-left: 3px solid var(--red); padding-left: 9px; }
+    .evidence-entry.review-rejected::before { background: var(--red); }
+    .evidence-entry.review-rejected .evidence-meta { color: var(--red); font-weight: 700; }
+    .evidence-entry.resolved { border-left: 3px solid var(--green); padding-left: 9px; }
     .evidence-entry.resolved::before { background: var(--green); }
+    .evidence-entry.resolved .evidence-meta { color: var(--green); font-weight: 700; }
+    .evidence-entry.regulator { border-left: 3px solid var(--navy); padding-left: 9px; }
+    .evidence-entry.regulator::before { background: var(--navy); }
+    .evidence-entry.regulator .evidence-meta { color: var(--navy); font-weight: 700; }
+    .event-chip { background: var(--navy); border-radius: 3px; color: #fff; display: inline-block; font-size: 8px; font-weight: 700; letter-spacing: .06em; margin-left: 5px; padding: 2px 4px; vertical-align: 1px; }
     .evidence-meta { color: var(--muted); font-size: 10px; }
     .evidence-action { color: #33465e; font-size: 12px; line-height: 1.4; margin-top: 3px; }
     .help-button { background: transparent; border: 1px solid #63809f; border-radius: 5px; color: #dbe7f3; cursor: pointer; font-size: 11px; font-weight: 700; margin-top: 17px; padding: 7px 10px; }
@@ -189,6 +215,14 @@
     .help-dialog h2 { margin-bottom: 9px; }
     .help-dialog p { color: #445871; font-size: 13px; line-height: 1.55; margin-bottom: 18px; }
     .help-dialog .action-button { cursor: pointer; }
+    .critical-alert-modal { align-items: flex-start; background: transparent; display: none; inset: 0; justify-content: flex-end; padding: 24px; position: fixed; z-index: 50; }
+    .critical-alert-modal.visible { display: flex; }
+    .critical-alert-dialog { background: #fff; border: 2px solid var(--red); border-top: 5px solid var(--amber); border-radius: 6px; box-shadow: 0 16px 38px rgba(10, 26, 48, .4); max-width: 330px; padding: 14px 16px 16px; width: 100%; }
+    .critical-alert-icon { color: var(--red); font-size: 19px; font-weight: 700; line-height: 1; }
+    .critical-alert-dialog h2 { color: #8d2632; font-size: 15px; margin: 6px 0 7px; }
+    .critical-alert-dialog p { color: #445871; font-size: 11px; line-height: 1.45; margin-bottom: 12px; }
+    .critical-alert-dialog .action-button { background: var(--red); color: #fff; cursor: pointer; font-size: 10px; padding: 6px 9px; }
+    .critical-alert-dialog .action-button:hover { background: #b83d48; }
     .controls-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
     .control-card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; transition: border-color .2s, box-shadow .2s, transform .2s; }
     .control-card.filtered-out { display: none; }
@@ -244,6 +278,28 @@
     .audit-entry.override { background: var(--red-soft); border: 1px solid #efb7bc; border-left: 4px solid var(--red); border-radius: 4px; padding: 8px 9px; }
     .audit-entry.override::before { background: var(--red); left: -24px; }
     .audit-entry.override .audit-meta { color: var(--red); font-weight: 700; }
+    .audit-entry.breach { border-left: 3px solid var(--red); padding-left: 9px; }
+    .audit-entry.breach::before { background: var(--red); }
+    .audit-entry.breach .audit-meta { color: var(--red); font-weight: 700; }
+    .audit-entry.breach .audit-action { color: #33465e; font-weight: 600; }
+    .audit-entry.escalation { border-left: 3px solid var(--amber); padding-left: 9px; }
+    .audit-entry.escalation::before { background: var(--amber); }
+    .audit-entry.escalation .audit-meta { color: #9a6815; font-weight: 700; }
+    .audit-entry.escalation .audit-action { color: #33465e; font-weight: 700; }
+    .audit-entry.board { border-left: 4px solid var(--amber); padding-left: 8px; }
+    .audit-entry.board::before { background: var(--amber); left: -25px; }
+    .audit-entry.board .audit-meta { color: #9a6815; font-weight: 700; }
+    .audit-entry.board .audit-action { color: #33465e; font-weight: 700; }
+    .audit-entry.review-accepted { border-left: 3px solid var(--green); padding-left: 9px; }
+    .audit-entry.review-accepted::before { background: var(--green); }
+    .audit-entry.review-accepted .audit-meta { color: var(--green); font-weight: 700; }
+    .audit-entry.review-rejected { border-left: 3px solid var(--red); padding-left: 9px; }
+    .audit-entry.review-rejected::before { background: var(--red); }
+    .audit-entry.review-rejected .audit-meta { color: var(--red); font-weight: 700; }
+    .audit-entry.resolved .audit-meta { color: var(--green); font-weight: 700; }
+    .audit-entry.regulator { border-left: 3px solid var(--navy); padding-left: 9px; }
+    .audit-entry.regulator::before { background: var(--navy); }
+    .audit-entry.regulator .audit-meta { color: var(--navy); font-weight: 700; }
     .review-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .review-actions .action-button { font-size: 10px; padding: 6px 8px; }
     .review-actions .accept-review { background: var(--green-soft); color: var(--green); }
@@ -378,12 +434,13 @@
               <div>
                 <div class="simulation-controls">
                   <div class="sim-day"><strong id="simDay">Day 1 of 5</strong><span id="simDate">01 Oct 2026</span></div>
-                  <button class="sim-button unhappy" id="unhappyFlowButton" type="button">Run: Control decay</button>
-                  <button class="sim-button primary" id="happyFlowButton" type="button">Run: Remediation</button>
+                  <button class="sim-button unhappy" id="unhappyFlowButton" type="button">Run: TD Bank decay timeline (2014–2024)</button>
+                  <button class="sim-button primary" id="happyFlowButton" type="button">Run: Remediation timeline</button>
                   <button class="sim-button" id="pauseScenarioButton" type="button" disabled hidden>Play scenario</button>
                   <button class="sim-button" id="resetSimulationButton" type="button" hidden>Reset</button>
                 </div>
                 <div class="simulation-caption" id="simulationCaption" role="status" aria-live="polite"></div>
+                <div class="simulation-pause-banner" id="simulationPauseBanner" role="status" hidden>⏸ Auto-paused — this is a good point to demonstrate a manual override.</div>
               </div>
             </div>
             <div class="simulation-legacy" hidden><div class="simulation-state"><strong id="simulationStateTitle">Case-study baseline</strong><p id="simulationStateCopy">The dashboard is showing the four simulated TD AML control failures as initially recorded.</p></div><div class="activity-feed" id="activityFeed"></div></div>
@@ -408,6 +465,14 @@
       <button class="action-button" id="closeHelpButton" type="button">Close help</button>
     </div>
   </div>
+  <div class="critical-alert-modal" id="criticalAlertModal" role="alertdialog" aria-modal="true" aria-labelledby="criticalAlertTitle" aria-describedby="criticalAlertBody">
+    <div class="critical-alert-dialog">
+      <div class="critical-alert-icon" aria-hidden="true">⚠</div>
+      <h2 id="criticalAlertTitle">Critical control alert</h2>
+      <p id="criticalAlertBody"></p>
+      <button class="action-button" id="acknowledgeCriticalAlert" type="button">Acknowledge</button>
+    </div>
+  </div>
 
   <script>
     const escalationPath = ["AML Officer", "CRO", "Risk Committee", "Board"];
@@ -421,7 +486,7 @@
         currentLevel: "100% coverage verified",
         lastTested: "30 Sep 2026",
         evidence: "Transaction Monitoring Report Q3 2026",
-        riskLevel: "Critical",
+        riskLevel: "Low",
         status: "Compliant",
         reviewStatus: null,
         reviewSnapshot: null,
@@ -429,9 +494,7 @@
         escalationPath,
         escalationStage: -1,
         auditTrail: [
-          { timestamp: "15 Oct 2026 · 09:14", actor: "System monitor", action: "Coverage variance detected: 92 percentage points below required level." },
-          { timestamp: "30 Sep 2026 · 16:40", actor: "AML Compliance", action: "Quarterly control test completed; material coverage gap recorded." },
-          { timestamp: "02 Aug 2026 · 11:05", actor: "AML Officer", action: "Evidence pack submitted for Q3 oversight review." }
+          { timestamp: "01 Jan 2014 · 09:00", actor: "System monitor", action: "Baseline control health check — all required levels met." }
         ]
       },
       {
@@ -440,20 +503,18 @@
         requiredControl: "Detection scenarios must be reviewed at least annually against current typologies and products.",
         controlOwner: "Financial Crime Technology",
         requiredLevel: "Annual review",
-        currentLevel: "Last updated 2014, no changes through 2022",
+        currentLevel: "Last reviewed Jan 2014 — within annual cycle",
         lastTested: "28 Sep 2026",
         evidence: "Scenario Inventory & Review Attestation",
-        riskLevel: "Critical",
-        status: "Failed",
+        riskLevel: "Low",
+        status: "Compliant",
         reviewStatus: null,
         reviewSnapshot: null,
         overrideCount: 0,
         escalationPath,
-        escalationStage: 2,
+        escalationStage: -1,
         auditTrail: [
-          { timestamp: "28 Sep 2026 · 14:22", actor: "System monitor", action: "Scenario currency test failed; review age exceeds policy tolerance." },
-          { timestamp: "12 Sep 2026 · 10:18", actor: "Financial Crime Technology", action: "Scenario inventory reconciled; legacy rules remain unchanged." },
-          { timestamp: "18 Jul 2026 · 09:30", actor: "AML Officer", action: "Annual review evidence request issued to control owner." }
+          { timestamp: "01 Jan 2014 · 09:00", actor: "System monitor", action: "Baseline control health check — all required levels met." }
         ]
       },
       {
@@ -465,7 +526,7 @@
         currentLevel: "AML assessment signed off pre-launch",
         lastTested: "25 Sep 2026",
         evidence: "New Product Approval Gate Register",
-        riskLevel: "Critical",
+        riskLevel: "Low",
         status: "Compliant",
         reviewStatus: null,
         reviewSnapshot: null,
@@ -473,9 +534,7 @@
         escalationPath,
         escalationStage: -1,
         auditTrail: [
-          { timestamp: "25 Sep 2026 · 13:10", actor: "Product Governance", action: "Pre-launch control test failed; approval gate evidence incomplete." },
-          { timestamp: "08 Sep 2026 · 15:45", actor: "Risk Committee", action: "Product readiness exception noted in committee minutes." },
-          { timestamp: "11 Aug 2026 · 12:06", actor: "System monitor", action: "Launch record matched without a corresponding signed AML assessment." }
+          { timestamp: "01 Jan 2014 · 09:00", actor: "System monitor", action: "Baseline control health check — all required levels met." }
         ]
       },
       {
@@ -484,20 +543,18 @@
         requiredControl: "Audit and regulatory findings must be remediated, evidenced, and closed within the agreed SLA.",
         controlOwner: "Enterprise Risk",
         requiredLevel: "Remediation within 90 days",
-        currentLevel: "Multiple findings open 180+ days",
+        currentLevel: "No open findings",
         lastTested: "01 Oct 2026",
         evidence: "Issue Management Aging Report",
-        riskLevel: "High",
-        status: "Overdue",
+        riskLevel: "Low",
+        status: "Compliant",
         reviewStatus: null,
         reviewSnapshot: null,
         overrideCount: 0,
         escalationPath,
-        escalationStage: 1,
+        escalationStage: -1,
         auditTrail: [
-          { timestamp: "01 Oct 2026 · 17:05", actor: "Enterprise Risk", action: "Aging test identified multiple findings beyond the 90-day remediation SLA." },
-          { timestamp: "15 Sep 2026 · 09:42", actor: "CRO", action: "Owner action plans requested for all findings aged over 180 days." },
-          { timestamp: "04 Aug 2026 · 16:12", actor: "Internal Audit", action: "Follow-up review recorded insufficient closure evidence." }
+          { timestamp: "01 Jan 2014 · 09:00", actor: "System monitor", action: "Baseline control health check — all required levels met." }
         ]
       }
     ];
@@ -505,11 +562,25 @@
     const grid = document.getElementById("controlsGrid");
     const toggle = document.getElementById("regulatorToggle");
     const baselineControls = JSON.parse(JSON.stringify(controls));
+    const postDecayBaseline = JSON.parse(JSON.stringify(controls)).map((control) => {
+      const postDecayState = {
+        "AML-001": { status: "Failed", currentLevel: "8% coverage", riskLevel: "Critical", escalationStage: 3 },
+        "AML-002": { status: "Failed", currentLevel: "Last updated 2014, no changes since", riskLevel: "Critical", escalationStage: 2 },
+        "AML-003": { status: "Failed", currentLevel: "Zelle launched without completed assessment", riskLevel: "Critical", escalationStage: 2 },
+        "AML-004": { status: "Overdue", currentLevel: "Multiple findings open 180+ days", riskLevel: "High", escalationStage: 1 }
+      }[control.id];
+      return {
+        ...control,
+        ...postDecayState,
+        auditTrail: [{ timestamp: "2024 · post-enforcement", actor: "Independent monitor", action: "Independent monitor engaged; remediation program initiated." }]
+      };
+    });
     const simulationStart = new Date("2026-10-01T09:00:00");
     const scenarioLabels = {
-      decay: ["① Baseline", "② Decay detected", "③ Threshold breached", "④ Escalated", "⑤ Regulator notified"],
-      recovery: ["① Baseline", "② Evidence restored", "③ Controls tested", "④ Compliant", "⑤ Regulator view ready"]
+      decay: ["① 2014 · Baseline", "② 2014 · Scenario review lapses", "③ 2017 · Product launched without assessment", "④ 2018 · Coverage begins declining", "⑤ 2024 · Critical breach & escalation"],
+      recovery: ["① Post-enforcement baseline", "② Coverage remediated", "③ Scenario review remediated", "④ Product controls remediated", "⑤ Findings remediated"]
     };
+    const autoPauseSteps = { decay: [2, 3] };
     let simulationDay = 1;
     let simulationMode = "baseline";
     let scenarioKind = "decay";
@@ -517,6 +588,11 @@
     let scenarioTimer = null;
     let scenarioPaused = false;
     let scenarioRunning = false;
+    let autoPauseActive = false;
+    let scenarioRunId = 0;
+    let criticalFailureAlertShown = false;
+    let criticalAlertQueue = [];
+    let activeCriticalAlert = null;
     let activityLog = [
       { day: 1, tone: "", action: "Daily control health snapshot loaded from the case-study baseline." }
     ];
@@ -537,6 +613,19 @@
       if (!entry.reviewAction || control.reviewStatus !== "Pending Review") return "";
       return `<div class="review-actions"><button class="action-button accept-review" type="button" data-review-action="accept" data-control-id="${control.id}">Accept</button><button class="action-button reject-review" type="button" data-review-action="reject" data-control-id="${control.id}">Reject</button></div>`;
     }
+    function eventPrefix(entry) {
+      return {
+        override: "OVERRIDE · ",
+        breach: "BREACH · ",
+        escalation: "ESCALATED · ",
+        board: "→ BOARD · ",
+        "review-accepted": "✓ REVIEW ACCEPTED · ",
+        "review-rejected": "✗ REVIEW REJECTED · ",
+        resolved: "✓ RESOLVED · ",
+        regulator: "⚑ REGULATOR NOTIFIED · "
+      }[entry.tone] || "";
+    }
+    function eventChip(entry) { return entry.tone === "board" ? `<span class="event-chip">BOARD</span>` : ""; }
     function actionForm(control) {
       if (!activeAction || activeAction.id !== control.id) return "";
       if (activeAction.type === "resolve") return `<form class="action-form" data-action-form="resolve" data-control-id="${control.id}">
@@ -551,7 +640,41 @@
         <div class="form-actions"><button class="action-button confirm" type="submit">Confirm override</button><button class="action-button cancel" type="button" data-action="cancel-action">Cancel</button></div>
       </form>`;
     }
-    function simulatedAuditTimestamp() { return `${formatSimulationDate()} · 09:00 · system-generated`; }
+    function realTimeNow() {
+      return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(new Date());
+    }
+    function simulatedAuditTimestamp() {
+      return `${formatSimulationDate()} · ${realTimeNow()} · system-generated`;
+    }
+    function queueCriticalAlert(key, control, title, body) {
+      if (activeCriticalAlert?.key === key || criticalAlertQueue.some((alert) => alert.key === key)) return;
+      criticalAlertQueue.push({ key, controlId: control.id, title, body });
+      showNextCriticalAlert();
+    }
+    function showNextCriticalAlert() {
+      if (activeCriticalAlert || !criticalAlertQueue.length) return;
+      activeCriticalAlert = criticalAlertQueue.shift();
+      document.getElementById("criticalAlertTitle").textContent = activeCriticalAlert.title;
+      document.getElementById("criticalAlertBody").textContent = activeCriticalAlert.body;
+      document.getElementById("criticalAlertModal").classList.add("visible");
+    }
+    function acknowledgeCriticalAlert() {
+      if (!activeCriticalAlert) return;
+      const control = controls.find((item) => item.id === activeCriticalAlert.controlId);
+      if (control) {
+        control.auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), createdAt: Date.now(), actor: "System", tone: "breach", action: `Critical alert acknowledged by ${control.controlOwner}.` });
+      }
+      activeCriticalAlert = null;
+      document.getElementById("criticalAlertModal").classList.remove("visible");
+      render();
+      showNextCriticalAlert();
+    }
+    function showAutoPauseBanner() {
+      document.getElementById("simulationPauseBanner").hidden = false;
+    }
+    function clearAutoPauseBanner() {
+      document.getElementById("simulationPauseBanner").hidden = true;
+    }
     function renderFilters() {
       const risks = ["All", "Critical", "High", "Medium", "Low"];
       const statuses = ["All", "Compliant", "At Risk", "Failed", "Overdue"];
@@ -606,7 +729,7 @@
           ["Risk level", control.riskLevel, false],
           ["Status", control.status, false]
         ];
-        const audit = control.auditTrail.map((entry) => `<div class="audit-entry ${entry.tone || ""}"><div class="audit-meta">${entry.tone === "override" ? "OVERRIDE · " : ""}${entry.timestamp} · ${entry.actor}</div><div class="audit-action">${entry.action}</div>${reviewActions(control, entry)}</div>`).join("");
+        const audit = control.auditTrail.map((entry) => `<div class="audit-entry ${entry.tone || ""}"><div class="audit-meta">${eventPrefix(entry)}${entry.timestamp}${eventChip(entry)} · ${entry.actor}</div><div class="audit-action">${entry.action}</div>${reviewActions(control, entry)}</div>`).join("");
         const path = control.escalationPath.map((stage, index) => {
           let state = index < control.escalationStage ? "past" : index === control.escalationStage ? "current" : "";
           return `<div class="path-step ${state}"><span class="path-dot"></span>${stage}</div>`;
@@ -656,17 +779,18 @@
     function renderSimulation() {
       const modeLabels = { baseline: "Baseline", decay: "Control decay in progress", recovery: "Remediation in progress" };
       const modeCopy = {
-        baseline: "The dashboard is showing a mixed baseline: one pre-existing failed scenario control, one overdue finding, and two controls within tolerance.",
-        decay: "The system is progressing through a control decay story; changes are system-derived and automatically logged.",
-        recovery: "The system is progressing through a remediation story; evidence is being accepted as controls return to tolerance."
+        baseline: "All four controls are compliant at the 2014 baseline.",
+        decay: "Replaying TD Bank's actual 2014–2024 control timeline. Pause at any point to demonstrate manual actions on any control.",
+        recovery: "Replaying TD Bank's remediation period under independent monitorship, starting from the control state found at the end of the 2014–2024 decay timeline."
       };
-      document.getElementById("simDay").textContent = `Day ${simulationDay} · ${modeLabels[simulationMode]}`;
+      document.getElementById("simDay").textContent = `Day ${simulationDay} of 5 · ${modeLabels[simulationMode]}`;
       document.getElementById("simDate").textContent = formatSimulationDate();
       document.getElementById("simulationStateTitle").textContent = modeLabels[simulationMode];
       document.getElementById("simulationStateCopy").textContent = modeCopy[simulationMode];
       document.querySelectorAll("#scenarioSteps .scenario-step").forEach((step, index) => {
-        step.textContent = (scenarioLabels[scenarioKind] || scenarioLabels.decay)[index];
-        step.className = `scenario-step ${index === scenarioStep ? "current" : index < scenarioStep ? "complete" : ""}`;
+        const isPausedStep = autoPauseActive && index === scenarioStep;
+        step.textContent = `${(scenarioLabels[scenarioKind] || scenarioLabels.decay)[index]}${isPausedStep ? " ⏸" : ""}`;
+        step.className = `scenario-step ${index === scenarioStep ? "current" : index < scenarioStep ? "complete" : ""} ${isPausedStep ? "paused" : ""}`;
       });
       document.getElementById("activityFeed").innerHTML = activityLog.slice(0, 5).map((entry) => `<div class="activity-entry ${entry.tone}"><div class="activity-meta">Day ${entry.day} · ${entry.tone === "good" ? "Passed" : entry.tone === "bad" ? "Exception" : "System"}</div><div class="activity-action">${entry.action}</div></div>`).join("");
     }
@@ -676,7 +800,7 @@
         const parseDate = (value) => new Date(`${value.split(" · ")[0]} ${value.split(" · ")[1] || "00:00"}`).getTime();
         return (b.createdAt || parseDate(b.timestamp)) - (a.createdAt || parseDate(a.timestamp));
       });
-      document.getElementById("evidenceTimeline").innerHTML = evidence.slice(0, 20).map((entry) => `<div class="evidence-entry ${entry.tone || ""}"><div class="evidence-meta">${entry.tone === "override" ? "OVERRIDE · " : ""}${entry.timestamp} · ${entry.actor} · ${entry.control}</div><div class="evidence-action">${entry.action}</div></div>`).join("");
+      document.getElementById("evidenceTimeline").innerHTML = evidence.slice(0, 20).map((entry) => `<div class="evidence-entry ${entry.tone || ""}"><div class="evidence-meta">${eventPrefix(entry)}${entry.timestamp}${eventChip(entry)} · ${entry.actor} · ${entry.control}</div><div class="evidence-action">${entry.action}</div></div>`).join("");
     }
 
     function showToast(message, title = "Automated escalation") {
@@ -705,7 +829,7 @@
         if (snapshot && snapshot.actionType === "override" && control.manualOverride) control.status = control.manualOverride.overriddenStatus;
         control.reviewStatus = "Accepted";
         control.reviewSnapshot = null;
-        control.auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), createdAt: Date.now(), actor: "CRO reviewer", action: "Review accepted; the override or resolution remains in effect." });
+        control.auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), createdAt: Date.now(), actor: "CRO reviewer", tone: "review-accepted", action: "Review accepted; the override or resolution remains in effect." });
       } else {
         const snapshot = control.reviewSnapshot;
         if (snapshot) {
@@ -717,7 +841,7 @@
         }
         control.reviewStatus = "Rejected";
         control.reviewSnapshot = null;
-        control.auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), createdAt: Date.now(), actor: "CRO reviewer", action: "Review rejected; control reverted to the values recorded before the override or resolution." });
+        control.auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), createdAt: Date.now(), actor: "CRO reviewer", tone: "review-rejected", action: "Review rejected; control reverted to the values recorded before the override or resolution." });
       }
       openControlId = control.id;
       render();
@@ -751,7 +875,10 @@
         control.auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), createdAt: Date.now(), actor: control.controlOwner, tone: "override", reviewAction: true, action: `MANUAL OVERRIDE — status displayed as ${escapeHtml(overriddenStatus)} pending CRO review. Underlying metric unchanged (still: ${escapeHtml(control.currentLevel)}). Justification: ${escapeHtml(justification)}.` });
         activityLog.unshift({ day: simulationDay, tone: "bad", action: `${control.id} manually overridden to ${overriddenStatus}; underlying metric unchanged.` });
         showSimulationCaption("! Manual override logged — visible to regulators", "bad");
-        if (control.riskLevel === "Critical") showToast("Critical override — automatically routed to CRO for review.", "Review routing");
+        if (control.riskLevel === "Critical") {
+          showToast("Critical override — automatically routed to CRO for review.", "Review routing");
+          queueCriticalAlert(`manual-override-${control.id}-${Date.now()}`, control, "⚠ Critical Override Review", `${control.obligation} has a manual override pending review. Current level: ${control.currentLevel}. The override has been automatically routed to CRO and logged in the audit trail.`);
+        }
       }
       activeAction = null;
       openControlId = control.id;
@@ -766,17 +893,20 @@
       showSimulationCaption.timer = window.setTimeout(() => caption.classList.remove("visible"), 3800);
     }
 
-    function restoreBaseline() {
+    function restoreBaseline(source = baselineControls) {
       window.clearTimeout(scenarioTimer);
-      controls.splice(0, controls.length, ...JSON.parse(JSON.stringify(baselineControls)));
+      controls.splice(0, controls.length, ...JSON.parse(JSON.stringify(source)));
       simulationDay = 1;
       simulationMode = "baseline";
       scenarioKind = "decay";
       scenarioStep = 0;
       scenarioPaused = false;
+      autoPauseActive = false;
       scenarioRunning = false;
+      criticalFailureAlertShown = false;
       activityLog = [{ day: 1, tone: "", action: "Daily control health snapshot loaded from the case-study baseline." }];
       openControlId = null;
+      clearAutoPauseBanner();
       render();
       updateScenarioButton();
     }
@@ -786,69 +916,87 @@
       const runButtons = [document.getElementById("unhappyFlowButton"), document.getElementById("happyFlowButton")];
       const resetButton = document.getElementById("resetSimulationButton");
       pauseButton.disabled = !scenarioRunning;
-      pauseButton.textContent = scenarioPaused || !scenarioRunning ? "Play scenario" : "Pause scenario";
-      pauseButton.hidden = true;
+      pauseButton.textContent = scenarioPaused ? "Resume scenario" : "Pause scenario";
+      pauseButton.hidden = !(scenarioRunning && scenarioPaused);
       runButtons.forEach((button) => { button.hidden = scenarioRunning; });
       resetButton.hidden = !scenarioRunning;
     }
 
     function applyScenarioStep(step) {
-      const control = controls[0];
       simulationMode = scenarioKind;
       simulationDay = step + 1;
       scenarioStep = step;
       if (scenarioKind === "decay") {
         if (step === 1) {
-          control.status = "At Risk";
-          control.currentLevel = "72% coverage and falling";
-          control.auditTrail.unshift({ timestamp: "02 Oct 2026 · system-generated", actor: "Automated control monitor", action: "Coverage trend crossed the early-warning threshold." });
-          activityLog.unshift({ day: simulationDay, tone: "bad", action: "Decay detected: transaction monitoring coverage fell below the early-warning threshold." });
-          showSimulationCaption("↓ System-derived value — cannot be manually edited", "bad");
+          controls[1].status = "Failed";
+          controls[1].riskLevel = "Critical";
+          controls[1].currentLevel = "Last updated 2014, no changes since";
+          controls[1].auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), actor: "Automated control monitor", tone: "breach", action: "Scenario currency test failed; review age exceeds policy tolerance." });
+          activityLog.unshift({ day: simulationDay, tone: "bad", action: "2014 scenario review lapsed; monitoring scenarios were not refreshed." });
+          showSimulationCaption("↓ 2014 review lapse detected", "bad");
+          if (!criticalFailureAlertShown) {
+            criticalFailureAlertShown = true;
+            queueCriticalAlert(`scenario-${scenarioRunId}-critical-failure`, controls[1], "⚠ Critical Control Failure", `${controls[1].obligation} has breached its required threshold. Current level: ${controls[1].currentLevel}. This has been automatically escalated to ${controls[1].escalationPath[0]} and logged in the audit trail.`);
+          }
         } else if (step === 2) {
-          control.status = "Failed";
-          control.currentLevel = "8% coverage";
-          control.escalationStage = Math.min(control.escalationStage + 1, control.escalationPath.length - 1);
-          control.auditTrail.unshift({ timestamp: "03 Oct 2026 · system-generated", actor: "Automated control monitor", action: "Critical coverage threshold breached." });
-          activityLog.unshift({ day: simulationDay, tone: "bad", action: "Critical threshold breached; status changed from At Risk to Failed." });
-          showSimulationCaption("↓ Threshold breached — status changed automatically", "bad");
+          controls[2].status = "Failed";
+          controls[2].riskLevel = "Critical";
+          controls[2].currentLevel = "Zelle launched without completed assessment";
+          controls[2].auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), actor: "Automated control monitor", tone: "breach", action: "New product launched without a completed AML assessment." });
+          activityLog.unshift({ day: simulationDay, tone: "bad", action: "2017 product launch exception detected; AML assessment evidence was incomplete." });
+          showSimulationCaption("↓ 2017 product assessment gap detected", "bad");
         } else if (step === 3) {
-          control.escalationStage = Math.min(control.escalationStage + 1, control.escalationPath.length - 1);
-          control.auditTrail.unshift({ timestamp: "04 Oct 2026 · system-generated", actor: "Automated control monitor", action: `Risk auto-escalated to ${control.escalationPath[control.escalationStage]}.` });
-          activityLog.unshift({ day: simulationDay, tone: "bad", action: `Auto-escalated to ${control.escalationPath[control.escalationStage]}; no human approval required.` });
-          showSimulationCaption("↑ Auto-escalated — no human approval required", "bad");
+          controls[0].status = "At Risk";
+          controls[0].riskLevel = "High";
+          controls[0].currentLevel = "72% coverage and declining";
+          controls[0].auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), actor: "Automated control monitor", tone: "breach", action: "Transaction monitoring coverage began declining below the required level." });
+          activityLog.unshift({ day: simulationDay, tone: "bad", action: "2018 coverage decline detected; transaction monitoring moved to At Risk." });
+          showSimulationCaption("↓ 2018 coverage decline detected", "bad");
         } else {
-          control.auditTrail.unshift({ timestamp: "05 Oct 2026 · system-generated", actor: "Automated control monitor", action: "Regulator notification triggered from the escalation rule." });
-          activityLog.unshift({ day: simulationDay, tone: "bad", action: "Regulator notification triggered; evidence preserved in the audit trail." });
-          showSimulationCaption("! Regulator notification triggered by rule", "bad");
+          controls[0].status = "Failed";
+          controls[0].riskLevel = "Critical";
+          controls[0].currentLevel = "8% coverage";
+          controls[0].escalationStage = controls[0].escalationPath.length - 1;
+          controls[0].auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), actor: "Automated control monitor", tone: "breach", action: "Critical coverage threshold breached; current level is 8% coverage." });
+          controls[0].auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), actor: "Automated control monitor", tone: "board", action: "Risk auto-escalated to Board." });
+          controls[0].auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), actor: "Automated control monitor", tone: "regulator", action: "Regulator notification triggered by the critical breach." });
+          activityLog.unshift({ day: simulationDay, tone: "bad", action: "2024 critical coverage breach detected; regulator notification triggered." });
+          showSimulationCaption("! 2024 breach — regulator notification triggered", "bad");
+          showToast("Regulator notification triggered by the 2024 critical breach.", "Automated escalation");
+          queueCriticalAlert(`scenario-${scenarioRunId}-board-escalation`, controls[0], "⚠ Escalation to Board", `${controls[0].obligation} has breached its required threshold. Current level: ${controls[0].currentLevel}. This has been automatically escalated to Board and logged in the audit trail.`);
         }
       } else if (step === 1) {
-        controls[3].status = "At Risk";
-        controls[3].riskLevel = "Medium";
-        controls[3].currentLevel = "Remediation evidence under review";
-        activityLog.unshift({ day: simulationDay, tone: "good", action: "Remediation plan accepted; evidence review started." });
-        showSimulationCaption("↑ Evidence received — review is system-tracked", "good");
-      } else if (step === 2) {
-        controls[3].status = "Compliant";
-        controls[3].riskLevel = "Low";
-        controls[3].currentLevel = "Remediated within 90 days";
-        controls[3].escalationStage = -1;
-        controls[3].auditTrail.unshift({ timestamp: "03 Oct 2026 · system-generated", actor: "Automated control monitor", action: "Remediation evidence accepted and finding closed." });
-        activityLog.unshift({ day: simulationDay, tone: "good", action: "Audit finding remediation passed its evidence check." });
-        showSimulationCaption("✓ Evidence accepted — status moved to Compliant", "good");
-      } else if (step === 3) {
         controls[0].status = "Compliant";
         controls[0].riskLevel = "Low";
         controls[0].currentLevel = "100% coverage verified";
         controls[0].escalationStage = -1;
+        controls[0].auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), actor: "Independent monitor", action: "Transaction monitoring coverage remediation evidence accepted." });
+        activityLog.unshift({ day: simulationDay, tone: "good", action: "Coverage remediation accepted under independent monitorship." });
+        showSimulationCaption("✓ Coverage evidence accepted", "good");
+      } else if (step === 2) {
+        controls[1].status = "Compliant";
+        controls[1].riskLevel = "Low";
+        controls[1].currentLevel = "Scenario review completed and current";
+        controls[1].escalationStage = -1;
+        controls[1].auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), actor: "Independent monitor", action: "Scenario review remediation evidence accepted; current typologies validated." });
+        activityLog.unshift({ day: simulationDay, tone: "good", action: "Scenario currency remediation accepted under independent monitorship." });
+        showSimulationCaption("✓ Scenario review evidence accepted", "good");
+      } else if (step === 3) {
+        controls[2].status = "Compliant";
+        controls[2].riskLevel = "Low";
+        controls[2].currentLevel = "AML assessment signed off pre-launch";
+        controls[2].escalationStage = -1;
+        controls[2].auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), actor: "Independent monitor", action: "New product AML assessment remediation evidence accepted." });
+        activityLog.unshift({ day: simulationDay, tone: "good", action: "Product AML readiness remediation accepted under independent monitorship." });
+        showSimulationCaption("✓ Product control evidence accepted", "good");
+      } else {
         controls[3].status = "Compliant";
         controls[3].riskLevel = "Low";
-        controls[3].currentLevel = "All findings remediated within 90 days";
+        controls[3].currentLevel = "No open findings";
         controls[3].escalationStage = -1;
-        activityLog.unshift({ day: simulationDay, tone: "good", action: "Coverage and finding remediation passed independently; pre-existing scenario currency remains under review." });
-        showSimulationCaption("✓ Remediated controls passed their own thresholds", "good");
-      } else {
-        activityLog.unshift({ day: simulationDay, tone: "good", action: "Regulator-ready evidence view is available with no internal actions required." });
-        showSimulationCaption("✓ Regulator-ready evidence view", "good");
+        controls[3].auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), actor: "Independent monitor", action: "Finding remediation evidence accepted; no open findings remain." });
+        activityLog.unshift({ day: simulationDay, tone: "good", action: "Finding remediation accepted; all four controls are now compliant." });
+        showSimulationCaption("✓ Remediation complete — all controls compliant", "good");
       }
       render();
       updateScenarioButton();
@@ -860,6 +1008,14 @@
         scenarioTimer = null;
         if (scenarioPaused) return;
         applyScenarioStep(scenarioStep + 1);
+        if (autoPauseSteps[scenarioKind]?.includes(scenarioStep)) {
+          scenarioPaused = true;
+          autoPauseActive = true;
+          render();
+          showAutoPauseBanner();
+          updateScenarioButton();
+          return;
+        }
         if (scenarioStep < 4) scheduleScenarioStep(1500);
         else scenarioRunning = false;
         updateScenarioButton();
@@ -868,10 +1024,12 @@
     }
 
     function startScenario(kind) {
-      restoreBaseline();
+      restoreBaseline(kind === "recovery" ? postDecayBaseline : baselineControls);
       scenarioKind = kind;
       simulationMode = kind;
       scenarioStep = 0;
+      scenarioRunId += 1;
+      criticalFailureAlertShown = false;
       scenarioPaused = false;
       scenarioRunning = true;
       render();
@@ -883,9 +1041,14 @@
       if (!scenarioRunning) return;
       scenarioPaused = !scenarioPaused;
       if (scenarioPaused) {
+        autoPauseActive = false;
         window.clearTimeout(scenarioTimer);
         scenarioTimer = null;
+        render();
       } else {
+        autoPauseActive = false;
+        clearAutoPauseBanner();
+        render();
         scheduleScenarioStep(250);
       }
       updateScenarioButton();
@@ -902,6 +1065,7 @@
     const simulationWidget = document.getElementById("simulationWidget");
     document.getElementById("simulationLauncher").addEventListener("click", () => { simulationWidget.classList.add("open"); document.body.classList.add("simulation-open"); });
     document.getElementById("simulationMinimize").addEventListener("click", () => { simulationWidget.classList.remove("open"); document.body.classList.remove("simulation-open"); });
+    document.getElementById("acknowledgeCriticalAlert").addEventListener("click", acknowledgeCriticalAlert);
     document.getElementById("helpButton").addEventListener("click", () => helpModal.classList.add("visible"));
     document.getElementById("closeHelpButton").addEventListener("click", closeHelp);
     helpModal.addEventListener("click", (event) => { if (event.target === helpModal) closeHelp(); });
