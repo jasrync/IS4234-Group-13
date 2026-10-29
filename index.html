@@ -78,35 +78,42 @@
 
     .simulation-panel { background: #202b3b; border: 2px dashed #d79625; border-radius: 4px; box-shadow: 0 14px 34px rgba(10, 22, 39, .2); color: #eaf1f8; font-family: "IBM Plex Mono", monospace; margin-bottom: 18px; overflow: hidden; position: relative; }
     .simulation-panel::before { background: repeating-linear-gradient(135deg, #d79625 0, #d79625 8px, #202b3b 8px, #202b3b 16px); content: ""; height: 5px; left: 0; position: absolute; right: 0; top: 0; }
+    .simulation-widget { bottom: 24px; position: fixed; right: 24px; width: min(300px, calc(100vw - 48px)); z-index: 30; }
+    .simulation-launcher { background: #202b3b; border: 2px dashed #d79625; border-radius: 4px; box-shadow: 0 12px 30px rgba(10, 22, 39, .25); color: #f0bd55; cursor: pointer; display: block; font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 700; padding: 8px 11px; text-align: left; width: 100%; }
+    .simulation-launcher:hover { background: #2b3a4e; }
+    .simulation-widget .simulation-panel { display: none; margin: 0; max-height: 320px; overflow-y: auto; box-shadow: 0 18px 45px rgba(10, 22, 39, .35); width: 100%; }
+    .simulation-widget.open .simulation-launcher { display: none; }
+    .simulation-widget.open .simulation-panel { display: block; }
+    .simulation-minimize { background: transparent; border: 1px solid #6b7b8e; border-radius: 2px; color: #c8d3df; cursor: pointer; font-family: "IBM Plex Mono", monospace; font-size: 14px; line-height: 1; padding: 4px 8px; }
+    .simulation-minimize:hover { background: #2b3a4e; }
     .content > section[aria-labelledby="dashboardTitle"] { display: flex; flex-direction: column; }
     .summary-row { order: 1; }
     .portfolio-panel { order: 2; }
     .register-tab { order: 3; }
     .filter-bar, .register-layout { order: 4; }
-    .simulation-tab { order: 5; }
-    .simulation-panel { order: 6; }
+    .simulation-tab { display: none; }
     .evidence-tab { order: 7; }
     .evidence-section { order: 8; }
     .section-tab { color: var(--navy); font-size: 11px; font-weight: 700; letter-spacing: .1em; margin: 27px 0 10px; text-transform: uppercase; }
     .section-tab span { color: var(--blue); }
-    .simulation-head { align-items: center; border-bottom: 1px solid #465468; display: flex; justify-content: space-between; gap: 18px; padding: 21px 20px 17px; }
+    .simulation-head { align-items: center; border-bottom: 1px solid #465468; display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px 8px; }
     .simulation-kicker { color: #f0bd55; font-size: 10px; font-weight: 700; letter-spacing: .16em; margin: 0 0 8px; text-transform: uppercase; }
-    .simulation-title { color: #fff; font-size: 16px; margin: 0; }
-    .simulation-subtitle { color: #aab9c9; font-size: 12px; line-height: 1.5; margin: 5px 0 0; }
-    .simulation-live { background: transparent; border: 1px solid #6b7b8e; border-radius: 2px; color: #c8d3df; font-size: 10px; font-weight: 700; padding: 6px 9px; white-space: nowrap; }
-    .simulation-disclaimer { border-bottom: 1px solid #465468; color: #bdc9d6; font-size: 11px; line-height: 1.55; margin: 0; padding: 0 20px 15px; }
-    .simulation-disclaimer strong { color: #f0bd55; display: block; font-size: 11px; letter-spacing: .12em; margin-bottom: 5px; }
-    .simulation-body { display: grid; grid-template-columns: 1fr 1.25fr; gap: 20px; padding: 18px 20px 20px; }
-    .simulation-controls { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
-    .scenario-steps { border-bottom: 1px solid #465468; display: flex; gap: 0; list-style: none; margin: 0; overflow-x: auto; padding: 0 20px; }
-    .scenario-step { color: #7f91a6; flex: 1 0 auto; font-size: 10px; font-weight: 700; padding: 11px 9px 10px; text-align: center; }
+    .simulation-title { color: #fff; font-size: 13px; margin: 0; }
+    .simulation-subtitle { color: #aab9c9; font-size: 10px; line-height: 1.35; margin: 0; padding: 8px 12px 0; white-space: nowrap; }
+    .simulation-live { display: none; }
+    .simulation-disclaimer { border: 0; color: #bdc9d6; font-size: 10px; line-height: 1.35; margin: 0; padding: 8px 12px 0; white-space: nowrap; }
+    .simulation-disclaimer strong { display: none; }
+    .simulation-body { display: block; padding: 8px 12px 10px; }
+    .simulation-controls { align-items: center; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .scenario-steps { border-bottom: 1px solid #465468; display: flex; gap: 0; list-style: none; margin: 8px 0 0; overflow: hidden; padding: 0 8px; white-space: nowrap; }
+    .scenario-step { color: #7f91a6; flex: 1 1 0; font-size: 8px; font-weight: 700; min-width: 0; overflow: hidden; padding: 7px 1px 6px; text-align: center; text-overflow: ellipsis; }
     .scenario-step.current { border-bottom: 3px solid #f0bd55; color: #f0bd55; }
     .scenario-step.complete { color: #73c8a5; }
-    .sim-day { background: #101a2b; border: 1px solid #53657a; border-radius: 2px; color: #fff; min-width: 122px; padding: 9px 11px; }
+    .sim-day { color: #b9c8da; font-size: 10px; grid-column: 1 / -1; }
     .sim-day strong, .sim-day span { display: block; }
-    .sim-day strong { font-size: 12px; }
-    .sim-day span { color: #b9c8da; font-size: 10px; margin-top: 3px; }
-    .sim-button { background: transparent; border: 1px solid #718196; border-radius: 2px; color: #d8e2ec; cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 600; padding: 10px 11px; }
+    .sim-day strong { font-size: 10px; }
+    .sim-day span { display: none; }
+    .sim-button { background: transparent; border: 1px solid #718196; border-radius: 2px; color: #d8e2ec; cursor: pointer; font-family: inherit; font-size: 9px; font-weight: 600; padding: 7px 6px; }
     .sim-button::before { color: #f0bd55; content: "> "; }
     .sim-button:hover { background: #2b3a4e; border-color: #b6c4d2; }
     .sim-button.primary { border-color: #73c8a5; color: #a8e1c7; }
@@ -114,10 +121,10 @@
     .sim-button.unhappy { border-color: #e16a73; color: #ffb3b8; }
     .sim-button.unhappy:hover { background: #4a2934; }
     .sim-button:disabled { cursor: wait; opacity: .65; }
-    .simulation-state { background: #172335; border: 1px solid #465468; border-radius: 2px; padding: 12px 14px; }
+    .simulation-state { display: none; }
     .simulation-state strong { color: #fff; display: block; font-size: 12px; }
     .simulation-state p { color: #aab9c9; font-size: 11px; line-height: 1.45; margin: 4px 0 0; }
-    .simulation-caption { color: #f0bd55; font-size: 11px; font-weight: 700; min-height: 16px; opacity: 0; padding-top: 9px; transition: opacity .25s ease; }
+    .simulation-caption { color: #f0bd55; font-size: 9px; font-weight: 700; height: 24px; line-height: 1.3; opacity: 0; overflow: hidden; padding-top: 7px; transition: opacity .25s ease; }
     .simulation-caption.visible { opacity: 1; }
     .simulation-caption.good { color: #73c8a5; }
     .simulation-caption.bad { color: #ff9ea6; }
@@ -264,7 +271,7 @@
     .empty-note { color: var(--muted); font-size: 12px; }
 
     .footer { border-top: 1px solid var(--line); background: #fff; color: var(--muted); font-size: 11px; padding: 17px clamp(20px, 5vw, 72px); }
-    .toast { position: fixed; z-index: 5; bottom: 24px; right: 24px; max-width: 390px; background: var(--navy); color: #fff; border-left: 4px solid #e16a73; border-radius: 5px; box-shadow: 0 12px 35px rgba(10, 26, 48, .28); padding: 15px 18px; font-size: 12px; line-height: 1.45; transform: translateY(25px); opacity: 0; pointer-events: none; transition: .3s ease; }
+    .toast { position: fixed; z-index: 35; bottom: 24px; left: 24px; max-width: 390px; background: var(--navy); color: #fff; border-left: 4px solid #e16a73; border-radius: 5px; box-shadow: 0 12px 35px rgba(10, 26, 48, .28); padding: 15px 18px; font-size: 12px; line-height: 1.45; transform: translateY(25px); opacity: 0; pointer-events: none; transition: .3s ease; }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast strong { display: block; color: #ffb3b8; font-size: 11px; letter-spacing: .05em; margin-bottom: 3px; text-transform: uppercase; }
 
@@ -275,6 +282,12 @@
       .controls-grid, .detail-grid, .simulation-body { grid-template-columns: 1fr; }
     }
     @media (max-width: 520px) {
+      .simulation-widget { bottom: 0; left: 0; right: 0; width: 100%; }
+      .simulation-launcher { border-radius: 4px 4px 0 0; }
+      .simulation-widget .simulation-panel { border-radius: 4px 4px 0 0; max-height: 320px; }
+      .simulation-widget .simulation-head { align-items: center; display: flex; padding: 10px 12px 8px; }
+      .simulation-widget .simulation-body { padding: 8px 12px 10px; }
+      body.simulation-open .toast { bottom: 338px; }
       .content { padding-top: 26px; }
       .summary-metrics { gap: 14px; justify-content: space-between; }
       .metric { padding-left: 10px; }
@@ -349,17 +362,11 @@
           <div class="controls-grid" id="controlsGrid"></div>
           <details class="alerts-panel" open><summary class="alerts-heading"><h3 id="alertsTitle">Active Alerts</h3><span class="alert-count" id="alertCount">0</span></summary><div id="alertsList"></div></details>
         </div>
-          <div class="section-tab simulation-tab"><span>②</span> Scenario Simulation</div>
-          <section class="simulation-panel" aria-labelledby="simulationTitle">
-            <div class="simulation-head">
-              <div>
-                <p class="simulation-kicker">⚠ TESTING HARNESS — NOT PART OF PRODUCTION SYSTEM</p>
-                <h2 class="simulation-title" id="simulationTitle">Simulated control room</h2>
-                <p class="simulation-subtitle">Move through daily checks to see healthy evidence, exceptions, and escalation events appear over time.</p>
-              </div>
-              <span class="simulation-live">SIMULATED / NO BACKEND</span>
-            </div>
-            <p class="simulation-disclaimer"><strong>DEMO CONSOLE / SYNTHETIC INPUTS</strong>This panel simulates time-series data changes for demonstration purposes. In a live deployment, control status would update automatically from real data feeds — no manual scenario controls would exist.</p>
+          <div class="simulation-widget" id="simulationWidget">
+            <button class="simulation-launcher" id="simulationLauncher" type="button">⚠ Testing Console</button>
+            <section class="simulation-panel" aria-labelledby="simulationTitle">
+            <div class="simulation-head"><h2 class="simulation-title" id="simulationTitle">Testing Console</h2><button class="simulation-minimize" id="simulationMinimize" type="button" aria-label="Minimize Testing Console">—</button></div>
+            <p class="simulation-disclaimer">Simulated data — not part of production system.</p>
             <ol class="scenario-steps" id="scenarioSteps" aria-label="Scenario progress">
               <li class="scenario-step current">① Baseline</li>
               <li class="scenario-step">② Decay detected</li>
@@ -370,22 +377,19 @@
             <div class="simulation-body">
               <div>
                 <div class="simulation-controls">
-                  <div class="sim-day"><strong id="simDay">Day 1 · Baseline</strong><span id="simDate">01 Oct 2026</span></div>
-                  <button class="sim-button unhappy" id="unhappyFlowButton" type="button">Start scenario: TD Bank control decay</button>
-                  <button class="sim-button primary" id="happyFlowButton" type="button">Start scenario: Remediation to compliant</button>
-                  <button class="sim-button" id="pauseScenarioButton" type="button" disabled>Play scenario</button>
-                  <button class="sim-button" id="resetSimulationButton" type="button">Reset to baseline</button>
+                  <div class="sim-day"><strong id="simDay">Day 1 of 5</strong><span id="simDate">01 Oct 2026</span></div>
+                  <button class="sim-button unhappy" id="unhappyFlowButton" type="button">Run: Control decay</button>
+                  <button class="sim-button primary" id="happyFlowButton" type="button">Run: Remediation</button>
+                  <button class="sim-button" id="pauseScenarioButton" type="button" disabled hidden>Play scenario</button>
+                  <button class="sim-button" id="resetSimulationButton" type="button" hidden>Reset</button>
                 </div>
-                <div class="simulation-state"><strong id="simulationStateTitle">Case-study baseline</strong><p id="simulationStateCopy">The dashboard is showing the four simulated TD AML control failures as initially recorded.</p></div>
                 <div class="simulation-caption" id="simulationCaption" role="status" aria-live="polite"></div>
               </div>
-              <div>
-                <div class="activity-title"><strong>Daily activity</strong><span>Newest first</span></div>
-                <div class="activity-feed" id="activityFeed"></div>
-              </div>
             </div>
-          </section>
-          <div class="section-tab evidence-tab"><span>③</span> Audit &amp; Evidence Trail</div>
+            <div class="simulation-legacy" hidden><div class="simulation-state"><strong id="simulationStateTitle">Case-study baseline</strong><p id="simulationStateCopy">The dashboard is showing the four simulated TD AML control failures as initially recorded.</p></div><div class="activity-feed" id="activityFeed"></div></div>
+            </section>
+          </div>
+          <div class="section-tab evidence-tab"><span>②</span> Audit &amp; Evidence Trail</div>
           <section class="evidence-section" aria-labelledby="evidenceTitle">
             <h2 class="simulation-title" id="evidenceTitle">Consolidated evidence view</h2>
             <p class="evidence-intro">A single reverse-chronological timeline across all four controls, including system-generated scenario events.</p>
@@ -778,9 +782,14 @@
     }
 
     function updateScenarioButton() {
-      const button = document.getElementById("pauseScenarioButton");
-      button.disabled = !scenarioRunning;
-      button.textContent = scenarioPaused || !scenarioRunning ? "Play scenario" : "Pause scenario";
+      const pauseButton = document.getElementById("pauseScenarioButton");
+      const runButtons = [document.getElementById("unhappyFlowButton"), document.getElementById("happyFlowButton")];
+      const resetButton = document.getElementById("resetSimulationButton");
+      pauseButton.disabled = !scenarioRunning;
+      pauseButton.textContent = scenarioPaused || !scenarioRunning ? "Play scenario" : "Pause scenario";
+      pauseButton.hidden = true;
+      runButtons.forEach((button) => { button.hidden = scenarioRunning; });
+      resetButton.hidden = !scenarioRunning;
     }
 
     function applyScenarioStep(step) {
@@ -890,6 +899,9 @@
 
     const helpModal = document.getElementById("helpModal");
     const closeHelp = () => { helpModal.classList.remove("visible"); localStorage.setItem("amlGrcHelpSeen", "true"); };
+    const simulationWidget = document.getElementById("simulationWidget");
+    document.getElementById("simulationLauncher").addEventListener("click", () => { simulationWidget.classList.add("open"); document.body.classList.add("simulation-open"); });
+    document.getElementById("simulationMinimize").addEventListener("click", () => { simulationWidget.classList.remove("open"); document.body.classList.remove("simulation-open"); });
     document.getElementById("helpButton").addEventListener("click", () => helpModal.classList.add("visible"));
     document.getElementById("closeHelpButton").addEventListener("click", closeHelp);
     helpModal.addEventListener("click", (event) => { if (event.target === helpModal) closeHelp(); });
