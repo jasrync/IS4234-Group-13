@@ -82,11 +82,15 @@
     .simulation-widget { bottom: 24px; position: fixed; right: 24px; width: min(300px, calc(100vw - 48px)); z-index: 30; }
     .simulation-launcher { background: #202b3b; border: 2px dashed #d79625; border-radius: 4px; box-shadow: 0 12px 30px rgba(10, 22, 39, .25); color: #f0bd55; cursor: pointer; display: block; font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 700; padding: 8px 11px; text-align: left; width: 100%; }
     .simulation-launcher:hover { background: #2b3a4e; }
-    .simulation-widget .simulation-panel { display: none; margin: 0; max-height: 320px; overflow-y: auto; box-shadow: 0 18px 45px rgba(10, 22, 39, .35); width: 100%; }
+    .simulation-widget .simulation-panel { display: none; height: min(420px, 60vh); margin: 0; overflow: hidden; box-shadow: 0 18px 45px rgba(10, 22, 39, .35); width: 100%; }
     .simulation-widget.open .simulation-launcher { display: none; }
     .simulation-widget.open .simulation-panel { display: block; }
     .simulation-minimize { background: transparent; border: 1px solid #6b7b8e; border-radius: 2px; color: #c8d3df; cursor: pointer; font-family: "IBM Plex Mono", monospace; font-size: 14px; line-height: 1; padding: 4px 8px; }
     .simulation-minimize:hover { background: #2b3a4e; }
+    .simulation-scroll-content { height: calc(min(420px, 60vh) - 45px); overflow-y: auto; scrollbar-color: #53657a #172335; scrollbar-width: thin; }
+    .simulation-scroll-content::-webkit-scrollbar { width: 7px; }
+    .simulation-scroll-content::-webkit-scrollbar-track { background: #172335; }
+    .simulation-scroll-content::-webkit-scrollbar-thumb { background: #53657a; border-radius: 4px; }
     .content > section[aria-labelledby="dashboardTitle"] { display: flex; flex-direction: column; }
     .summary-row { order: 1; }
     .portfolio-panel { order: 2; }
@@ -104,6 +108,12 @@
     .simulation-live { display: none; }
     .simulation-disclaimer { border: 0; color: #bdc9d6; font-size: 10px; line-height: 1.35; margin: 0; padding: 8px 12px 0; white-space: nowrap; }
     .simulation-disclaimer strong { display: none; }
+    .simulation-import { border-bottom: 1px solid #465468; padding: 8px 12px; }
+    .simulation-import .filter-label { color: #aab9c9; margin-bottom: 5px; }
+    .simulation-import .import-button { background: #172335; border-color: #718196; color: #d8e2ec; font-family: "IBM Plex Mono", monospace; font-size: 9px; padding: 6px 8px; }
+    .simulation-import .import-button:hover { background: #2b3a4e; border-color: #b6c4d2; }
+    .simulation-import .import-caption { color: #8fa1b5; margin-top: 5px; }
+    .simulation-import .import-error { margin-top: 7px; }
     .simulation-body { display: block; padding: 8px 12px 10px; }
     .simulation-controls { align-items: center; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .scenario-steps { border-bottom: 1px solid #465468; display: flex; gap: 0; list-style: none; margin: 8px 0 0; overflow: hidden; padding: 0 8px; white-space: nowrap; }
@@ -156,10 +166,8 @@
     .filter-button:hover { border-color: #9db4cc; }
     .owner-filter { background: #f1f4f8; border: 1px solid var(--line); border-radius: 5px; color: #50647c; font-size: 11px; padding: 7px 9px; }
     .filter-count { color: var(--muted); font-size: 11px; margin: 0 0 2px auto; white-space: nowrap; }
-    .import-group { min-width: 240px; }
-    .import-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
-    .import-button, .import-template { background: #f1f4f8; border: 1px solid var(--line); border-radius: 5px; color: #50647c; cursor: pointer; display: inline-block; font-size: 11px; font-weight: 700; padding: 7px 9px; text-decoration: none; }
-    .import-button:hover, .import-template:hover { border-color: #9db4cc; background: #e9eef5; }
+    .import-button { background: #f1f4f8; border: 1px solid var(--line); border-radius: 5px; color: #50647c; cursor: pointer; display: inline-block; font-size: 11px; font-weight: 700; padding: 7px 9px; }
+    .import-button:hover { border-color: #9db4cc; background: #e9eef5; }
     .import-button input { height: 1px; opacity: 0; overflow: hidden; position: absolute; width: 1px; }
     .import-caption { color: var(--muted); font-size: 10px; line-height: 1.4; margin: 7px 0 0; }
     .import-error { background: var(--red-soft); border-left: 3px solid var(--red); color: #8d2632; font-size: 11px; line-height: 1.4; margin: 9px 0 0; padding: 7px 9px; white-space: pre-line; width: 100%; }
@@ -348,7 +356,7 @@
     @media (max-width: 520px) {
       .simulation-widget { bottom: 0; left: 0; right: 0; width: 100%; }
       .simulation-launcher { border-radius: 4px 4px 0 0; }
-      .simulation-widget .simulation-panel { border-radius: 4px 4px 0 0; max-height: 320px; }
+      .simulation-widget .simulation-panel { border-radius: 4px 4px 0 0; height: min(420px, 60vh); }
       .simulation-widget .simulation-head { align-items: center; display: flex; padding: 10px 12px 8px; }
       .simulation-widget .simulation-body { padding: 8px 12px 10px; }
       body.simulation-open .toast { bottom: 338px; }
@@ -420,8 +428,6 @@
           <div><span class="filter-label">Risk level</span><div class="filter-group" id="riskFilters"></div></div>
           <div><span class="filter-label">Status</span><div class="filter-group" id="statusFilters"></div></div>
           <div><span class="filter-label">Owner</span><select class="owner-filter" id="ownerFilter"><option value="All">All owners</option></select></div>
-          <div class="import-group"><span class="filter-label">External data</span><div class="import-actions"><label class="import-button" for="controlImport">Import data<input id="controlImport" type="file" accept=".xlsx,.csv"></label><a class="import-template" id="downloadTemplate" href="#">Download template</a></div><p class="import-caption">Demonstrates how this platform would ingest live control data from source systems in a production deployment.</p></div>
-          <p class="import-error" id="importError" role="alert" hidden></p>
           <p class="filter-count" id="filterCount"></p>
         </div>
         <div class="register-layout">
@@ -432,7 +438,9 @@
             <button class="simulation-launcher" id="simulationLauncher" type="button">⚠ Testing Console</button>
             <section class="simulation-panel" aria-labelledby="simulationTitle">
             <div class="simulation-head"><h2 class="simulation-title" id="simulationTitle">Testing Console</h2><button class="simulation-minimize" id="simulationMinimize" type="button" aria-label="Minimize Testing Console">—</button></div>
+            <div class="simulation-scroll-content">
             <p class="simulation-disclaimer">Simulated data — not part of production system.</p>
+            <div class="simulation-import"><span class="filter-label">Import control data</span><label class="import-button" for="controlImport">Import data<input id="controlImport" type="file" accept=".xlsx,.csv"></label><p class="import-caption">Import a control register file (.xlsx or .csv) to replace the current working dataset.</p><p class="import-error" id="importError" role="alert" hidden></p></div>
             <ol class="scenario-steps" id="scenarioSteps" aria-label="Scenario progress">
               <li class="scenario-step current">① Baseline</li>
               <li class="scenario-step">② Decay detected</li>
@@ -455,6 +463,7 @@
               </div>
             </div>
             <div class="simulation-legacy" hidden><div class="simulation-state"><strong id="simulationStateTitle">Case-study baseline</strong><p id="simulationStateCopy">The dashboard is showing the four simulated TD AML control failures as initially recorded.</p></div><div class="activity-feed" id="activityFeed"></div></div>
+            </div>
             </section>
           </div>
           <div class="section-tab evidence-tab"><span>②</span> Audit &amp; Evidence Trail</div>
@@ -691,7 +700,7 @@
           }
         });
         activeAction = null;
-        baselineControls = JSON.parse(JSON.stringify(controls));
+        //baselineControls = JSON.parse(JSON.stringify(controls));
         importedBaseline = JSON.parse(JSON.stringify(controls));
         render();
         updateScenarioButton();
@@ -699,18 +708,6 @@
       } catch (error) {
         setImportError(`Import failed: ${error.message || "unable to read the file."}`);
       }
-    }
-    function downloadControlTemplate(event) {
-      event.preventDefault();
-      if (typeof XLSX === "undefined") {
-        setImportError("Download failed: the spreadsheet library could not be loaded.");
-        return;
-      }
-      const rows = controls.map((control) => Object.fromEntries(importColumns.map((column) => [column, control[column]])));
-      const sheet = XLSX.utils.json_to_sheet(rows, { header: importColumns });
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, sheet, "Controls");
-      XLSX.writeFile(workbook, "control-register-template.xlsx");
     }
     function reviewBadge(control) {
       if (!control.reviewStatus) return "";
@@ -1219,7 +1216,6 @@
     document.getElementById("pauseScenarioButton").addEventListener("click", toggleScenarioPause);
     document.getElementById("resetSimulationButton").onclick = () => restoreBaseline();
     document.getElementById("controlImport").addEventListener("change", (event) => { const file = event.target.files[0]; if (file) importControlRegister(file); event.target.value = ""; });
-    document.getElementById("downloadTemplate").addEventListener("click", downloadControlTemplate);
     render();
     updateScenarioButton();
     if (!localStorage.getItem("amlGrcHelpSeen")) helpModal.classList.add("visible");
