@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --ink: #17243b;
@@ -155,6 +156,13 @@
     .filter-button:hover { border-color: #9db4cc; }
     .owner-filter { background: #f1f4f8; border: 1px solid var(--line); border-radius: 5px; color: #50647c; font-size: 11px; padding: 7px 9px; }
     .filter-count { color: var(--muted); font-size: 11px; margin: 0 0 2px auto; white-space: nowrap; }
+    .import-group { min-width: 240px; }
+    .import-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
+    .import-button, .import-template { background: #f1f4f8; border: 1px solid var(--line); border-radius: 5px; color: #50647c; cursor: pointer; display: inline-block; font-size: 11px; font-weight: 700; padding: 7px 9px; text-decoration: none; }
+    .import-button:hover, .import-template:hover { border-color: #9db4cc; background: #e9eef5; }
+    .import-button input { height: 1px; opacity: 0; overflow: hidden; position: absolute; width: 1px; }
+    .import-caption { color: var(--muted); font-size: 10px; line-height: 1.4; margin: 7px 0 0; }
+    .import-error { background: var(--red-soft); border-left: 3px solid var(--red); color: #8d2632; font-size: 11px; line-height: 1.4; margin: 9px 0 0; padding: 7px 9px; white-space: pre-line; width: 100%; }
     .register-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; }
     .alerts-panel { align-self: start; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); padding: 17px 16px; }
     .alerts-heading { align-items: center; display: flex; justify-content: space-between; margin-bottom: 12px; }
@@ -412,6 +420,8 @@
           <div><span class="filter-label">Risk level</span><div class="filter-group" id="riskFilters"></div></div>
           <div><span class="filter-label">Status</span><div class="filter-group" id="statusFilters"></div></div>
           <div><span class="filter-label">Owner</span><select class="owner-filter" id="ownerFilter"><option value="All">All owners</option></select></div>
+          <div class="import-group"><span class="filter-label">External data</span><div class="import-actions"><label class="import-button" for="controlImport">Import data<input id="controlImport" type="file" accept=".xlsx,.csv"></label><a class="import-template" id="downloadTemplate" href="#">Download template</a></div><p class="import-caption">Demonstrates how this platform would ingest live control data from source systems in a production deployment.</p></div>
+          <p class="import-error" id="importError" role="alert" hidden></p>
           <p class="filter-count" id="filterCount"></p>
         </div>
         <div class="register-layout">
@@ -436,6 +446,7 @@
                   <div class="sim-day"><strong id="simDay">Day 1 of 5</strong><span id="simDate">01 Oct 2026</span></div>
                   <button class="sim-button unhappy" id="unhappyFlowButton" type="button">Run: TD Bank decay timeline (2014–2024)</button>
                   <button class="sim-button primary" id="happyFlowButton" type="button">Run: Remediation timeline</button>
+                  <button class="sim-button" id="importedRecoveryButton" type="button" hidden title="Import a control file first to unlock this scenario.">Run: Remediate imported data</button>
                   <button class="sim-button" id="pauseScenarioButton" type="button" disabled hidden>Play scenario</button>
                   <button class="sim-button" id="resetSimulationButton" type="button" hidden>Reset</button>
                 </div>
@@ -561,7 +572,8 @@
 
     const grid = document.getElementById("controlsGrid");
     const toggle = document.getElementById("regulatorToggle");
-    const baselineControls = JSON.parse(JSON.stringify(controls));
+    let baselineControls = JSON.parse(JSON.stringify(controls));
+    let importedBaseline = null;
     const postDecayBaseline = JSON.parse(JSON.stringify(controls)).map((control) => {
       const postDecayState = {
         "AML-001": { status: "Failed", currentLevel: "8% coverage", riskLevel: "Critical", escalationStage: 3 },
@@ -578,7 +590,8 @@
     const simulationStart = new Date("2026-10-01T09:00:00");
     const scenarioLabels = {
       decay: ["① 2014 · Baseline", "② 2014 · Scenario review lapses", "③ 2017 · Product launched without assessment", "④ 2018 · Coverage begins declining", "⑤ 2024 · Critical breach & escalation"],
-      recovery: ["① Post-enforcement baseline", "② Coverage remediated", "③ Scenario review remediated", "④ Product controls remediated", "⑤ Findings remediated"]
+      recovery: ["① Post-enforcement baseline", "② Coverage remediated", "③ Scenario review remediated", "④ Product controls remediated", "⑤ Findings remediated"],
+      importedRecovery: ["① Imported baseline"]
     };
     const autoPauseSteps = { decay: [2, 3] };
     let simulationDay = 1;
@@ -591,6 +604,7 @@
     let autoPauseActive = false;
     let scenarioRunId = 0;
     let criticalFailureAlertShown = false;
+    let importedRecoveryTargets = [];
     let criticalAlertQueue = [];
     let activeCriticalAlert = null;
     let activityLog = [
@@ -604,6 +618,100 @@
 
     function slug(value) { return value.toLowerCase().replaceAll(" ", "-"); }
     function escapeHtml(value) { return String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[character]); }
+    const importColumns = ["id", "obligation", "requiredControl", "controlOwner", "requiredLevel", "currentLevel", "lastTested", "evidence", "riskLevel", "status", "escalationStage"];
+    const importRiskLevels = { low: "Low", medium: "Medium", high: "High", critical: "Critical" };
+    const importStatuses = { compliant: "Compliant", "at risk": "At Risk", failed: "Failed", overdue: "Overdue" };
+    function setImportError(message) {
+      const error = document.getElementById("importError");
+      error.textContent = message;
+      error.hidden = !message;
+    }
+    function importTone(status) { return status === "Compliant" ? "resolved" : "breach"; }
+    function importHeaderKey(value) { return String(value).trim().toLowerCase(); }
+    async function importControlRegister(file) {
+      setImportError("");
+      if (typeof XLSX === "undefined") {
+        setImportError("Import failed: the spreadsheet library could not be loaded.");
+        return;
+      }
+      try {
+        const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rawRows = XLSX.utils.sheet_to_json(firstSheet, { defval: "", raw: false });
+        if (!rawRows.length) {
+          setImportError("Import failed: the file contains no control rows.");
+          return;
+        }
+        const headers = Object.keys(rawRows[0]);
+        const headerMap = new Map(headers.map((header) => [importHeaderKey(header), header]));
+        const missingColumns = importColumns.filter((column) => !headerMap.has(column.toLowerCase()));
+        if (missingColumns.length) {
+          setImportError(`Import failed. Missing columns: ${missingColumns.join(", ")}.`);
+          return;
+        }
+        const errors = [];
+        const seenIds = new Set();
+        const rows = rawRows.map((rawRow, index) => {
+          const rowNumber = index + 2;
+          const row = Object.fromEntries(importColumns.map((column) => [column, String(rawRow[headerMap.get(column.toLowerCase())] ?? "").trim()]));
+          importColumns.forEach((column) => { if (!row[column]) errors.push(`Row ${rowNumber}: ${column} is required.`); });
+          const normalizedRisk = row.riskLevel.toLowerCase();
+          const normalizedStatus = row.status.toLowerCase();
+          if (row.riskLevel && !importRiskLevels[normalizedRisk]) errors.push(`Row ${rowNumber}, riskLevel: expected Low, Medium, High, or Critical.`);
+          if (row.status && !importStatuses[normalizedStatus]) errors.push(`Row ${rowNumber}, status: expected Compliant, At Risk, Failed, or Overdue.`);
+          const escalationStage = Number(row.escalationStage);
+          if (row.escalationStage && (!Number.isInteger(escalationStage) || escalationStage < -1 || escalationStage > 3)) errors.push(`Row ${rowNumber}, escalationStage: expected an integer from -1 to 3.`);
+          if (row.id && seenIds.has(row.id)) errors.push(`Row ${rowNumber}, id: duplicate control id ${row.id}.`);
+          if (row.id) seenIds.add(row.id);
+          return { ...row, riskLevel: importRiskLevels[normalizedRisk], status: importStatuses[normalizedStatus], escalationStage };
+        });
+        if (errors.length) {
+          setImportError(`Import failed:\n${errors.join("\n")}`);
+          return;
+        }
+        const filename = escapeHtml(file.name);
+        rows.forEach((row) => {
+          const control = controls.find((item) => item.id === row.id);
+          const importedFields = importColumns.filter((field) => field !== "id");
+          if (control) {
+            importedFields.forEach((field) => { control[field] = row[field]; });
+            control.reviewStatus = null;
+            control.reviewSnapshot = null;
+            delete control.manualOverride;
+            control.auditTrail.push({ timestamp: simulatedAuditTimestamp(), actor: "External data import", tone: importTone(row.status), action: `Control data updated via external file import (${filename}).` });
+          } else {
+            controls.push({
+              ...row,
+              escalationPath: ["AML Officer", "CRO", "Risk Committee", "Board"],
+              reviewStatus: null,
+              reviewSnapshot: null,
+              overrideCount: 0,
+              auditTrail: [{ timestamp: simulatedAuditTimestamp(), actor: "External data import", tone: importTone(row.status), action: `Control added via external file import (${filename}).` }]
+            });
+          }
+        });
+        activeAction = null;
+        baselineControls = JSON.parse(JSON.stringify(controls));
+        importedBaseline = JSON.parse(JSON.stringify(controls));
+        render();
+        updateScenarioButton();
+        showToast(`Imported ${rows.length} controls from ${file.name}.`, "External data import");
+      } catch (error) {
+        setImportError(`Import failed: ${error.message || "unable to read the file."}`);
+      }
+    }
+    function downloadControlTemplate(event) {
+      event.preventDefault();
+      if (typeof XLSX === "undefined") {
+        setImportError("Download failed: the spreadsheet library could not be loaded.");
+        return;
+      }
+      const rows = controls.map((control) => Object.fromEntries(importColumns.map((column) => [column, control[column]])));
+      const sheet = XLSX.utils.json_to_sheet(rows, { header: importColumns });
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, sheet, "Controls");
+      XLSX.writeFile(workbook, "control-register-template.xlsx");
+    }
     function reviewBadge(control) {
       if (!control.reviewStatus) return "";
       const labels = { "Pending Review": "⏳ Pending CRO Review", Accepted: "✓ Review Accepted", Rejected: "↩ Review Rejected" };
@@ -777,13 +885,15 @@
     }
 
     function renderSimulation() {
-      const modeLabels = { baseline: "Baseline", decay: "Control decay in progress", recovery: "Remediation in progress" };
+      const modeLabels = { baseline: "Baseline", decay: "Control decay in progress", recovery: "Remediation in progress", importedRecovery: "Imported data remediation" };
       const modeCopy = {
         baseline: "All four controls are compliant at the 2014 baseline.",
         decay: "Replaying TD Bank's actual 2014–2024 control timeline. Pause at any point to demonstrate manual actions on any control.",
-        recovery: "Replaying TD Bank's remediation period under independent monitorship, starting from the control state found at the end of the 2014–2024 decay timeline."
+        recovery: "Replaying TD Bank's remediation period under independent monitorship, starting from the control state found at the end of the 2014–2024 decay timeline.",
+        importedRecovery: "Replaying remediation of the control data most recently imported, starting from its as-imported state."
       };
-      document.getElementById("simDay").textContent = `Day ${simulationDay} of 5 · ${modeLabels[simulationMode]}`;
+      const scenarioTotal = scenarioKind === "importedRecovery" ? importedRecoveryTargets.length + 1 : 5;
+      document.getElementById("simDay").textContent = `Day ${simulationDay} of ${scenarioTotal} · ${modeLabels[simulationMode]}`;
       document.getElementById("simDate").textContent = formatSimulationDate();
       document.getElementById("simulationStateTitle").textContent = modeLabels[simulationMode];
       document.getElementById("simulationStateCopy").textContent = modeCopy[simulationMode];
@@ -914,11 +1024,14 @@
     function updateScenarioButton() {
       const pauseButton = document.getElementById("pauseScenarioButton");
       const runButtons = [document.getElementById("unhappyFlowButton"), document.getElementById("happyFlowButton")];
+      const importedButton = document.getElementById("importedRecoveryButton");
       const resetButton = document.getElementById("resetSimulationButton");
       pauseButton.disabled = !scenarioRunning;
       pauseButton.textContent = scenarioPaused ? "Resume scenario" : "Pause scenario";
       pauseButton.hidden = !(scenarioRunning && scenarioPaused);
       runButtons.forEach((button) => { button.hidden = scenarioRunning; });
+      importedButton.hidden = !importedBaseline || scenarioRunning;
+      importedButton.disabled = !importedBaseline || scenarioRunning;
       resetButton.hidden = !scenarioRunning;
     }
 
@@ -964,6 +1077,22 @@
           showSimulationCaption("! 2024 breach — regulator notification triggered", "bad");
           showToast("Regulator notification triggered by the 2024 critical breach.", "Automated escalation");
           queueCriticalAlert(`scenario-${scenarioRunId}-board-escalation`, controls[0], "⚠ Escalation to Board", `${controls[0].obligation} has breached its required threshold. Current level: ${controls[0].currentLevel}. This has been automatically escalated to Board and logged in the audit trail.`);
+        }
+      } else if (scenarioKind === "importedRecovery") {
+        const target = importedRecoveryTargets[step - 1];
+        const control = target && controls.find((item) => item.id === target.id);
+        if (control) {
+          control.status = "Compliant";
+          control.riskLevel = "Low";
+          control.currentLevel = control.requiredLevel;
+          control.escalationStage = -1;
+          control.auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), createdAt: Date.now(), actor: "Imported data remediation", tone: "resolved", action: `Remediation evidence accepted for ${control.obligation}.` });
+          activityLog.unshift({ day: simulationDay, tone: "good", action: `${control.obligation} remediated from imported data.` });
+          showSimulationCaption("✓ Imported control evidence accepted", "good");
+        } else {
+          controls.forEach((item) => { item.status = "Compliant"; item.riskLevel = "Low"; item.escalationStage = -1; });
+          activityLog.unshift({ day: simulationDay, tone: "good", action: "All imported controls are now compliant." });
+          showSimulationCaption("✓ Imported data fully compliant", "good");
         }
       } else if (step === 1) {
         controls[0].status = "Compliant";
@@ -1016,7 +1145,8 @@
           updateScenarioButton();
           return;
         }
-        if (scenarioStep < 4) scheduleScenarioStep(1500);
+        const finalStep = scenarioKind === "importedRecovery" ? importedRecoveryTargets.length + 1 : 4;
+        if (scenarioStep < finalStep) scheduleScenarioStep(1500);
         else scenarioRunning = false;
         updateScenarioButton();
       }, delay);
@@ -1024,13 +1154,26 @@
     }
 
     function startScenario(kind) {
-      restoreBaseline(kind === "recovery" ? postDecayBaseline : baselineControls);
+      if (kind === "importedRecovery" && !importedBaseline) return;
+      restoreBaseline(kind === "recovery" ? postDecayBaseline : kind === "importedRecovery" ? importedBaseline : baselineControls);
       scenarioKind = kind;
       simulationMode = kind;
       scenarioStep = 0;
       scenarioRunId += 1;
       criticalFailureAlertShown = false;
       scenarioPaused = false;
+      if (kind === "importedRecovery") {
+        importedRecoveryTargets = controls.filter((control) => ["Failed", "At Risk", "Overdue"].includes(control.status));
+        const markers = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"];
+        scenarioLabels.importedRecovery = ["① Imported baseline", ...importedRecoveryTargets.map((control, index) => `${markers[index + 1] || `${index + 2}.`} Remediate ${control.obligation}`), `${markers[importedRecoveryTargets.length + 1] || `${importedRecoveryTargets.length + 2}.`} Fully compliant`];
+        if (!importedRecoveryTargets.length) {
+          scenarioRunning = false;
+          render();
+          showToast("All imported controls are already compliant — nothing to remediate.", "Imported data");
+          updateScenarioButton();
+          return;
+        }
+      }
       scenarioRunning = true;
       render();
       showSimulationCaption(kind === "decay" ? "Scenario started — watch system-derived control changes" : "Scenario started — watch evidence restore compliance", kind === "decay" ? "bad" : "good");
@@ -1072,8 +1215,11 @@
     document.addEventListener("keydown", (event) => { if (event.key === "Escape" && helpModal.classList.contains("visible")) closeHelp(); });
     document.getElementById("unhappyFlowButton").addEventListener("click", () => startScenario("decay"));
     document.getElementById("happyFlowButton").addEventListener("click", () => startScenario("recovery"));
+    document.getElementById("importedRecoveryButton").addEventListener("click", () => startScenario("importedRecovery"));
     document.getElementById("pauseScenarioButton").addEventListener("click", toggleScenarioPause);
     document.getElementById("resetSimulationButton").onclick = () => restoreBaseline();
+    document.getElementById("controlImport").addEventListener("change", (event) => { const file = event.target.files[0]; if (file) importControlRegister(file); event.target.value = ""; });
+    document.getElementById("downloadTemplate").addEventListener("click", downloadControlTemplate);
     render();
     updateScenarioButton();
     if (!localStorage.getItem("amlGrcHelpSeen")) helpModal.classList.add("visible");
