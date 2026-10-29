@@ -1073,7 +1073,7 @@
     document.getElementById("unhappyFlowButton").addEventListener("click", () => startScenario("decay"));
     document.getElementById("happyFlowButton").addEventListener("click", () => startScenario("recovery"));
     document.getElementById("pauseScenarioButton").addEventListener("click", toggleScenarioPause);
-    document.getElementById("resetSimulationButton").addEventListener("click", restoreBaseline);
+    document.getElementById("resetSimulationButton").onclick = () => restoreBaseline();
     render();
     updateScenarioButton();
     if (!localStorage.getItem("amlGrcHelpSeen")) helpModal.classList.add("visible");
