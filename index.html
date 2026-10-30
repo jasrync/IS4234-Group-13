@@ -350,6 +350,28 @@
     .regulator-view .review-actions { display: none; }
     .empty-note { color: var(--muted); font-size: 12px; }
 
+    /* New Control Intake + Pending Control Approvals */
+    .badge.pending-implementation { color: var(--blue); background: var(--blue-soft); }
+    .intake-section { order: 3; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); margin: 0 0 18px; padding: 18px 20px 20px; }
+    .intake-section h2 { display: flex; align-items: center; gap: 10px; }
+    .regulator-view .intake-section { display: none; }
+    .intake-steps { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 14px 0 16px; padding: 0; }
+    .intake-step { background: #f1f4f8; border-radius: 99px; color: #7a8ba0; font-size: 10px; font-weight: 700; padding: 6px 10px; }
+    .intake-step.complete { background: var(--green-soft); color: var(--green); }
+    .intake-step.current { background: var(--blue-soft); box-shadow: inset 0 0 0 1px #b9cfe6; color: var(--blue); }
+    .intake-file { color: #445871; font-size: 12px; margin: 0 0 12px; }
+    .intake-message { background: var(--green-soft); border-left: 3px solid var(--green); color: var(--green); font-size: 12px; font-weight: 700; margin: 0 0 14px; padding: 8px 10px; }
+    .intake-parsing { align-items: center; color: var(--blue); display: flex; font-size: 12px; font-weight: 700; gap: 10px; padding: 6px 0 4px; }
+    .spinner { animation: intake-spin .8s linear infinite; border: 3px solid var(--blue-soft); border-radius: 50%; border-top-color: var(--blue); display: inline-block; height: 18px; width: 18px; }
+    @keyframes intake-spin { to { transform: rotate(360deg); } }
+    .intake-fields { display: grid; gap: 12px 16px; grid-template-columns: 1fr 1fr; }
+    .intake-fields .full { grid-column: 1 / -1; }
+    .action-form textarea { border: 1px solid #cbd8e5; border-radius: 4px; color: var(--ink); font: inherit; font-size: 11px; min-height: 64px; padding: 8px; resize: vertical; }
+    .action-form textarea:focus { border-color: var(--blue); outline: 2px solid var(--blue-soft); }
+    .draft-card { background: #fbfcfe; border: 1px solid var(--line); border-radius: 6px; margin-top: 14px; padding: 14px 16px 16px; }
+    .draft-meta { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .07em; margin-bottom: 12px; text-transform: uppercase; }
+    @media (max-width: 850px) { .intake-fields { grid-template-columns: 1fr; } }
+
     .footer { border-top: 1px solid var(--line); background: #fff; color: var(--muted); font-size: 11px; padding: 17px clamp(20px, 5vw, 72px); }
     .toast { position: fixed; z-index: 35; bottom: 24px; left: 24px; max-width: 390px; background: var(--navy); color: #fff; border-left: 4px solid #e16a73; border-radius: 5px; box-shadow: 0 12px 35px rgba(10, 26, 48, .28); padding: 15px 18px; font-size: 12px; line-height: 1.45; transform: translateY(25px); opacity: 0; pointer-events: none; transition: .3s ease; }
     .toast.show { opacity: 1; transform: translateY(0); }
@@ -412,6 +434,7 @@
               <option value="Product Governance">Product Governance (Control Owner)</option>
               <option value="Enterprise Risk">Enterprise Risk (Control Owner)</option>
               <option value="CRO" selected>CRO (Approver)</option>
+              <option value="Regulatory Change Manager">Regulatory Change Manager (Compliance)</option>
             </select>
             <p class="role-caption">Demonstrates that control owners can only act on their own controls, and only the CRO can approve or reject overrides and resolutions.</p>
           </div>
@@ -438,10 +461,12 @@
         <section class="portfolio-panel" aria-labelledby="portfolioTitle">
           <h2 id="portfolioTitle">Portfolio Risk Overview</h2>
           <div class="portfolio-grid">
-            <div class="chart-block"><p class="chart-title">Controls by current status</p><div class="donut-wrap"><div class="donut"><svg viewBox="0 0 42 42" aria-label="Control status distribution"><circle cx="21" cy="21" r="15.9" stroke="#e9f7f1" id="donutCompliant"></circle><circle cx="21" cy="21" r="15.9" stroke="#fff7e6" id="donutAtRisk"></circle><circle cx="21" cy="21" r="15.9" stroke="#fff0f1" id="donutFailed"></circle><circle cx="21" cy="21" r="15.9" stroke="#f4ead0" id="donutOverdue"></circle></svg><div class="donut-hole"><strong id="donutTotal">4</strong><span>controls</span></div></div><div class="chart-legend"><div class="legend-item"><i style="background:var(--green)"></i>Compliant <strong id="legendCompliant">0</strong></div><div class="legend-item"><i style="background:var(--amber)"></i>At Risk <strong id="legendAtRisk">0</strong></div><div class="legend-item"><i style="background:var(--red)"></i>Failed <strong id="legendFailed">0</strong></div><div class="legend-item"><i style="background:#b78320"></i>Overdue <strong id="legendOverdue">0</strong></div></div></div></div>
+            <div class="chart-block"><p class="chart-title">Controls by current status</p><div class="donut-wrap"><div class="donut"><svg viewBox="0 0 42 42" aria-label="Control status distribution"><circle cx="21" cy="21" r="15.9" stroke="#e9f7f1" id="donutCompliant"></circle><circle cx="21" cy="21" r="15.9" stroke="#fff7e6" id="donutAtRisk"></circle><circle cx="21" cy="21" r="15.9" stroke="#fff0f1" id="donutFailed"></circle><circle cx="21" cy="21" r="15.9" stroke="#f4ead0" id="donutOverdue"></circle><circle cx="21" cy="21" r="15.9" stroke="#dbe9f8" id="donutPendingImplementation"></circle></svg><div class="donut-hole"><strong id="donutTotal">4</strong><span>controls</span></div></div><div class="chart-legend"><div class="legend-item"><i style="background:var(--green)"></i>Compliant <strong id="legendCompliant">0</strong></div><div class="legend-item"><i style="background:var(--amber)"></i>At Risk <strong id="legendAtRisk">0</strong></div><div class="legend-item"><i style="background:var(--red)"></i>Failed <strong id="legendFailed">0</strong></div><div class="legend-item"><i style="background:#b78320"></i>Overdue <strong id="legendOverdue">0</strong></div><div class="legend-item"><i style="background:var(--blue)"></i>Pending Implementation <strong id="legendPendingImplementation">0</strong></div></div></div></div>
             <div class="chart-block"><p class="chart-title">Transaction Monitoring Coverage %</p><p class="trend-caption">Six-quarter trend · decay surfaced before correction</p><svg class="trend-chart" viewBox="0 0 520 128" preserveAspectRatio="none" aria-label="Coverage trend over six quarters"><path d="M10 14H510 M10 57H510 M10 100H510" stroke="#e7edf4" fill="none"/><path id="trendArea" d="" fill="#edf4fc"/><path id="trendLine" d="" fill="none" stroke="#3875bd" stroke-width="3"/><g id="trendPoints"></g></svg><div class="trend-labels"><span>Q2 ’25</span><span>Q3 ’25</span><span>Q4 ’25</span><span>Q1 ’26</span><span>Q2 ’26</span><span>Q3 ’26</span></div></div>
           </div>
         </section>
+        <section class="intake-section" id="intakeSection" aria-labelledby="intakeTitle" hidden></section>
+        <section class="intake-section" id="approvalsSection" aria-labelledby="approvalsTitle" hidden></section>
         <div class="section-tab register-tab"><span>①</span> Control Register</div>
         <div class="filter-bar" aria-label="Control register filters">
           <div><span class="filter-label">Risk level</span><div class="filter-group" id="riskFilters"></div></div>
@@ -756,9 +781,9 @@
     function actionForm(control) {
       if (!activeAction || activeAction.id !== control.id) return "";
       if (activeAction.type === "resolve") return `<form class="action-form" data-action-form="resolve" data-control-id="${control.id}">
-        <label>Remediation evidence (describe corrective action taken)<input name="remediationEvidence" type="text" required></label>
+        <label>${control.status === "Pending Implementation" ? "Implementation evidence (describe what was implemented)" : "Remediation evidence (describe corrective action taken)"}<input name="remediationEvidence" type="text" required></label>
         <label>Evidence reference<input name="evidenceReference" type="text" placeholder="Document name or ID" required></label>
-        <div class="form-actions"><button class="action-button confirm" type="submit">Confirm resolution</button><button class="action-button cancel" type="button" data-action="cancel-action">Cancel</button></div>
+        <div class="form-actions"><button class="action-button confirm" type="submit">${control.status === "Pending Implementation" ? "Submit for CRO review" : "Confirm resolution"}</button><button class="action-button cancel" type="button" data-action="cancel-action">Cancel</button></div>
       </form>`;
       return `<form class="action-form warning" data-action-form="override" data-control-id="${control.id}">
         <label>Justification for override (mandatory)<input name="justification" type="text" required></label>
@@ -808,7 +833,7 @@
     }
     function renderFilters() {
       const risks = ["All", "Critical", "High", "Medium", "Low"];
-      const statuses = ["All", "Compliant", "At Risk", "Failed", "Overdue"];
+      const statuses = ["All", "Compliant", "At Risk", "Failed", "Overdue", "Pending Implementation"];
       const buttons = (items, active, target, setter) => { document.getElementById(target).innerHTML = items.map((item) => `<button class="filter-button ${item === active ? "active" : ""}" type="button" data-filter="${setter}" data-value="${item}">${item}</button>`).join(""); };
       buttons(risks, activeRisk, "riskFilters", "risk");
       buttons(statuses, activeStatus, "statusFilters", "status");
@@ -820,7 +845,7 @@
       ownerSelect.onchange = () => { activeOwner = ownerSelect.value; render(); };
     }
     function renderAnalytics() {
-      const statuses = ["Compliant", "At Risk", "Failed", "Overdue"];
+      const statuses = ["Compliant", "At Risk", "Failed", "Overdue", "Pending Implementation"];
       const counts = statuses.map((status) => controls.filter((control) => control.status === status).length);
       let offset = 0;
       statuses.forEach((status, index) => { const circle = document.getElementById(`donut${status.replace(" ", "")}`); const share = counts[index] / controls.length * 100; circle.style.strokeDasharray = `${share} ${100 - share}`; circle.style.strokeDashoffset = -offset; offset += share; document.getElementById(`legend${status.replace(" ", "")}`).textContent = counts[index]; });
@@ -875,7 +900,7 @@
         // Role gating: only the owning role may Override/Resolve this control.
         const canAct = currentRole === control.controlOwner;
         const internalActions = canAct
-          ? `<button class="action-button" data-action="override" data-control-id="${control.id}">Override status</button><button class="action-button" data-action="resolve" data-control-id="${control.id}">Resolve finding</button>${actionForm(control)}`
+          ? `<button class="action-button" data-action="override" data-control-id="${control.id}">Override status</button><button class="action-button" data-action="resolve" data-control-id="${control.id}">${control.status === "Pending Implementation" ? "Submit implementation evidence" : "Resolve finding"}</button>${actionForm(control)}`
           : `<p class="role-note">Only ${escapeHtml(control.controlOwner)} can action this control.</p>`;
         return `<article class="control-card ${isOpen ? "open" : ""} ${isVisible ? "" : "filtered-out"}" data-id="${control.id}">
           <div class="card-head" data-action="toggle" role="button" tabindex="0" aria-expanded="${isOpen}">
@@ -905,6 +930,8 @@
       renderSimulation();
       renderEvidence();
       syncCriticalAlertModal();
+      renderIntake();
+      renderApprovals();
       document.querySelectorAll("[data-action='toggle']").forEach((element) => {
         element.addEventListener("click", () => { openControlId = element.closest(".control-card").dataset.id === openControlId ? null : element.closest(".control-card").dataset.id; render(); });
         element.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); element.click(); } });
@@ -1000,15 +1027,16 @@
         const remediationEvidence = String(values.remediationEvidence || "").trim();
         const evidenceReference = String(values.evidenceReference || "").trim();
         if (!remediationEvidence || !evidenceReference) return;
+        const wasPendingImplementation = control.status === "Pending Implementation";
         control.reviewSnapshot = captureReviewSnapshot(control, "resolve");
         control.reviewStatus = "Pending Review";
         control.currentLevel = control.requiredLevel;
         control.status = "Compliant";
         control.riskLevel = "Low";
         control.escalationStage = -1;
-        control.auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), createdAt: Date.now(), actor: control.controlOwner, tone: "resolved", reviewAction: true, action: `Finding resolved pending CRO review. Evidence: ${escapeHtml(evidenceReference)} — ${escapeHtml(remediationEvidence)}` });
+        control.auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), createdAt: Date.now(), actor: control.controlOwner, tone: "resolved", reviewAction: true, action: `${wasPendingImplementation ? "Implementation evidence submitted pending CRO review." : "Finding resolved pending CRO review."} Evidence: ${escapeHtml(evidenceReference)} — ${escapeHtml(remediationEvidence)}` });
         activityLog.unshift({ day: simulationDay, tone: "good", action: `${control.id} resolved with evidence reference ${evidenceReference}.` });
-        showSimulationCaption("✓ Finding resolved — evidence is now permanently logged", "good");
+        showSimulationCaption(wasPendingImplementation ? "✓ Implementation evidence submitted — pending CRO review" : "✓ Finding resolved — evidence is now permanently logged", "good");
       } else {
         const justification = String(values.justification || "").trim();
         const overriddenStatus = String(values.overriddenStatus || "");
@@ -1246,6 +1274,169 @@
       currentRole = roleSelect.value;
       activeAction = null;
       render();
+    });
+
+    // ---- New Control Intake (simulated: the uploaded file is never read) ----
+    const intakeSteps = ["① Upload", "② Parsing", "③ Draft fields", "④ CRO approval", "⑤ Added to register"];
+    const intakeFieldDefs = [
+      ["obligation", "Obligation", false],
+      ["requiredControl", "Required control", true],
+      ["controlOwner", "Control owner", false],
+      ["requiredLevel", "Required level", false],
+      ["currentLevel", "Current level", false],
+      ["evidence", "Evidence source", false],
+      ["riskLevel", "Risk level", false],
+      ["status", "Status", false]
+    ];
+    const intakeHardcodedDraft = {
+      obligation: "Independent Monitor Reporting",
+      requiredControl: "TD Bank must provide the OCC-appointed independent compliance monitor with timely access to records, personnel, and systems, and submit periodic remediation progress reports as required under the consent order.",
+      controlOwner: "Enterprise Risk",
+      requiredLevel: "Quarterly monitor reports submitted on schedule",
+      currentLevel: "Not yet implemented",
+      evidence: "Independent Monitor Engagement Letter & Reporting Schedule",
+      riskLevel: "High",
+      status: "Pending Implementation"
+    };
+    const intakeRole = "Regulatory Change Manager"; // second-line Compliance role that initiates intake
+    let pendingControlDrafts = [];
+    let intakeState = { stage: "idle", fileName: "", fields: null, message: "" };
+    let intakeRunId = 0;
+    let intakeDraftCounter = 0;
+    let intakeLastKey = null;
+    const intakeSection = document.getElementById("intakeSection");
+    const approvalsSection = document.getElementById("approvalsSection");
+
+    function renderIntake() {
+      // Regulatory Change Manager only: hidden for owners and the CRO (and for Regulator View via CSS).
+      const visible = currentRole === intakeRole;
+      intakeSection.hidden = !visible;
+      const key = `${visible}|${intakeState.stage}|${intakeState.fileName}|${intakeState.message}|${pendingControlDrafts.length}`;
+      if (key === intakeLastKey) return; // avoid rebuilding (and stealing focus) while the owner is typing
+      intakeLastKey = key;
+      if (!visible) { intakeSection.innerHTML = ""; return; }
+      const current = { idle: intakeState.message ? 3 : 0, parsing: 1, draft: 2 }[intakeState.stage];
+      const steps = `<ol class="intake-steps" aria-label="Intake progress">${intakeSteps.map((label, index) => `<li class="intake-step ${index < current ? "complete" : index === current ? "current" : ""}">${label}</li>`).join("")}</ol>`;
+      let body;
+      if (intakeState.stage === "parsing") {
+        body = `<p class="intake-file">Selected: <strong>${escapeHtml(intakeState.fileName)}</strong></p><div class="intake-parsing" role="status"><span class="spinner" aria-hidden="true"></span>Parsing document...</div>`;
+      } else if (intakeState.stage === "draft") {
+        const fields = intakeFieldDefs.map(([name, label, full]) => {
+          const value = escapeHtml(intakeState.fields[name]);
+          const input = name === "requiredControl"
+            ? `<textarea name="${name}" data-intake-field="${name}" required>${value}</textarea>`
+            : `<input name="${name}" data-intake-field="${name}" type="text" value="${value}" required>`;
+          return `<label class="${full ? "full" : ""}">${label}${input}</label>`;
+        }).join("");
+        body = `<p class="intake-file">Source document: <strong>${escapeHtml(intakeState.fileName)}</strong> · Draft fields extracted — review and edit before submitting.</p>
+          <form class="action-form" id="intakeForm" novalidate><div class="intake-fields">${fields}</div>
+            <div class="form-actions"><button class="action-button confirm" type="submit">Submit for CRO approval</button><button class="action-button cancel" type="button" data-intake-action="cancel">Discard draft</button></div>
+          </form>`;
+      } else {
+        body = `${intakeState.message ? `<p class="intake-message" role="status">${escapeHtml(intakeState.message)}</p>` : ""}<label class="import-button" for="intakeFile">Upload regulatory document (PDF)<input id="intakeFile" type="file" accept=".pdf,application/pdf"></label>${pendingControlDrafts.length ? `<p class="import-caption">Awaiting CRO approval (${pendingControlDrafts.length}): ${pendingControlDrafts.map((draft) => `<strong>${escapeHtml(draft.obligation)}</strong>`).join(", ")}</p>` : ""}`;
+      }
+      intakeSection.innerHTML = `<h2 id="intakeTitle">New Control Intake</h2><p class="section-intro">Upload a new regulatory document and the platform drafts the control for CRO approval.</p>${steps}${body}`;
+    }
+
+    function renderApprovals() {
+      const visible = currentRole === "CRO";
+      approvalsSection.hidden = !visible;
+      if (!visible) { approvalsSection.innerHTML = ""; return; }
+      const drafts = pendingControlDrafts.map((draft) => `<div class="draft-card">
+        <div class="draft-meta">${escapeHtml(draft.draftId)} · from ${escapeHtml(draft.sourceFile)} · submitted by ${escapeHtml(draft.submittedBy)}</div>
+        <div class="field-list">${intakeFieldDefs.map(([name, label, full]) => `<div class="field ${full ? "full" : ""}"><span class="data-label">${label}</span><span class="data-value">${escapeHtml(draft[name])}</span></div>`).join("")}</div>
+        <div class="review-actions"><button class="action-button accept-review" type="button" data-draft-action="approve" data-draft-id="${escapeHtml(draft.draftId)}">Approve</button><button class="action-button reject-review" type="button" data-draft-action="reject" data-draft-id="${escapeHtml(draft.draftId)}">Reject</button></div>
+      </div>`).join("");
+      approvalsSection.innerHTML = `<h2 id="approvalsTitle">Pending Control Approvals <span class="alert-count">${pendingControlDrafts.length}</span></h2><p class="section-intro">New controls drafted from regulatory documents are added to the register only after CRO approval.</p>${drafts || `<p class="empty-note" style="margin-top:14px">No drafts awaiting approval.</p>`}`;
+    }
+
+    function approveControlDraft(draftId) {
+      const index = pendingControlDrafts.findIndex((draft) => draft.draftId === draftId);
+      if (index < 0 || currentRole !== "CRO") return;
+      const draft = pendingControlDrafts[index];
+      const nextNumber = controls.reduce((max, control) => { const match = /^AML-(\d+)$/.exec(control.id); return match ? Math.max(max, Number(match[1])) : max; }, 0) + 1;
+      controls.push({
+        id: `AML-${String(nextNumber).padStart(3, "0")}`,
+        obligation: draft.obligation,
+        requiredControl: draft.requiredControl,
+        controlOwner: draft.controlOwner,
+        requiredLevel: draft.requiredLevel,
+        currentLevel: draft.currentLevel,
+        lastTested: "Not yet tested",
+        evidence: draft.evidence,
+        riskLevel: draft.riskLevel,
+        status: draft.status,
+        reviewStatus: null,
+        reviewSnapshot: null,
+        overrideCount: 0,
+        escalationPath: ["AML Officer", "CRO", "Risk Committee", "Board"],
+        escalationStage: -1,
+        auditTrail: [{ timestamp: simulatedAuditTimestamp(), actor: "CRO", tone: "resolved", action: "New control approved from document intake and added to the register." }]
+      });
+      pendingControlDrafts.splice(index, 1);
+      render();
+      showToast("New control added to register.", "Control intake");
+    }
+
+    function rejectControlDraft(draftId) {
+      const index = pendingControlDrafts.findIndex((draft) => draft.draftId === draftId);
+      if (index < 0 || currentRole !== "CRO") return;
+      pendingControlDrafts.splice(index, 1);
+      renderApprovals();
+      showToast("Draft rejected.", "Control intake");
+    }
+
+    intakeSection.addEventListener("change", (event) => {
+      if (event.target.id !== "intakeFile") return;
+      const file = event.target.files[0];
+      const name = file ? file.name : "";
+      event.target.value = "";
+      if (!name) return;
+      if (!/\.pdf$/i.test(name)) { showToast("Please select a PDF file.", "Control intake"); return; }
+      const runId = ++intakeRunId;
+      intakeState = { stage: "parsing", fileName: name, fields: null, message: "" }; // file content is deliberately never read
+      renderIntake();
+      window.setTimeout(() => {
+        if (runId !== intakeRunId) return;
+        intakeState = { ...intakeState, stage: "draft", fields: { ...intakeHardcodedDraft } };
+        renderIntake();
+      }, 2000);
+    });
+    intakeSection.addEventListener("input", (event) => {
+      const field = event.target.dataset.intakeField;
+      if (field && intakeState.fields) intakeState.fields[field] = event.target.value;
+    });
+    intakeSection.addEventListener("click", (event) => {
+      if (!event.target.closest("[data-intake-action='cancel']")) return;
+      intakeRunId += 1;
+      intakeState = { stage: "idle", fileName: "", fields: null, message: "" };
+      renderIntake();
+    });
+    intakeSection.addEventListener("submit", (event) => {
+      if (event.target.id !== "intakeForm") return;
+      event.preventDefault();
+      if (currentRole !== intakeRole || toggle.checked || !intakeState.fields) return;
+      const fields = Object.fromEntries(intakeFieldDefs.map(([name]) => [name, String(intakeState.fields[name] || "").trim()]));
+      const emptyFields = intakeFieldDefs.filter(([name]) => !fields[name]);
+      if (emptyFields.length) {
+        showToast(`Complete all fields before submitting: ${emptyFields.map(([, label]) => label).join(", ")}.`, "Control intake");
+        const firstEmpty = event.target.querySelector(`[data-intake-field="${emptyFields[0][0]}"]`);
+        if (firstEmpty) firstEmpty.focus();
+        return;
+      }
+      intakeDraftCounter += 1;
+      pendingControlDrafts.push({ draftId: `DRAFT-${String(intakeDraftCounter).padStart(3, "0")}`, ...fields, sourceFile: intakeState.fileName, submittedBy: currentRole, submittedAt: simulatedAuditTimestamp() });
+      intakeRunId += 1;
+      intakeState = { stage: "idle", fileName: "", fields: null, message: "Draft submitted for CRO approval." };
+      renderIntake();
+      renderApprovals();
+      showToast("Draft submitted for CRO approval.", "Control intake");
+    });
+    approvalsSection.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-draft-action]");
+      if (!button) return;
+      if (button.dataset.draftAction === "approve") approveControlDraft(button.dataset.draftId);
+      else rejectControlDraft(button.dataset.draftId);
     });
 
     const helpModal = document.getElementById("helpModal");
