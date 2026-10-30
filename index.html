@@ -64,6 +64,13 @@
     .toggle-label input:checked + .switch::after { transform: translateX(18px); }
     .mode-copy { margin: 9px 0 0 53px; color: #8da5c1; font-size: 11px; }
     .mode-copy + .mode-copy { margin-top: 5px; max-width: 220px; line-height: 1.45; }
+    .role-selector { margin-top: 16px; max-width: 290px; }
+    .role-selector label { color: #dbe7f3; display: block; font-size: 11px; font-weight: 700; letter-spacing: .07em; margin-bottom: 6px; text-transform: uppercase; }
+    .role-selector select { background: #183254; border: 1px solid #63809f; border-radius: 5px; color: #fff; font: inherit; font-size: 12px; padding: 7px 9px; width: 100%; }
+    .role-selector select:focus { outline: 2px solid #69b897; }
+    .role-caption { color: #8da5c1; font-size: 11px; line-height: 1.45; margin: 7px 0 0; }
+    .role-note { color: #8795a8; font-size: 11px; font-style: italic; margin: 0; width: 100%; background: #eef2f6; border-radius: 4px; padding: 8px 10px; }
+    .review-note { color: #8795a8; font-size: 10px; font-style: italic; }
     .regulator-banner { display: none; background: #fffbef; border-bottom: 1px solid #f3dfae; color: #7d5c1c; padding: 11px 20px; text-align: center; font-size: 13px; font-weight: 600; }
     .regulator-banner.visible { display: block; }
 
@@ -178,6 +185,7 @@
     .alert-count { background: var(--red-soft); border-radius: 99px; color: var(--red); font-size: 10px; font-weight: 700; padding: 4px 7px; }
     .alert-item { border-left: 2px solid var(--amber); color: #41546b; font-size: 11px; line-height: 1.4; margin-top: 9px; padding: 3px 0 3px 9px; }
     .alert-item.critical { border-color: var(--red); }
+    .alert-item.ack { border-color: var(--green); color: #6b7c90; }
     @media (max-width: 1100px) { .portfolio-grid, .register-layout { grid-template-columns: 1fr; } .alerts-panel { order: -1; } }
     .activity-title { align-items: center; display: flex; justify-content: space-between; margin: 17px 0 8px; }
     .activity-title strong { font-size: 12px; }
@@ -231,9 +239,9 @@
     .help-dialog h2 { margin-bottom: 9px; }
     .help-dialog p { color: #445871; font-size: 13px; line-height: 1.55; margin-bottom: 18px; }
     .help-dialog .action-button { cursor: pointer; }
-    .critical-alert-modal { align-items: flex-start; background: transparent; display: none; inset: 0; justify-content: flex-end; padding: 24px; position: fixed; z-index: 50; }
+    .critical-alert-modal { align-items: flex-start; background: transparent; display: none; inset: 0; justify-content: flex-end; padding: 24px; pointer-events: none; position: fixed; z-index: 50; }
     .critical-alert-modal.visible { display: flex; }
-    .critical-alert-dialog { background: #fff; border: 2px solid var(--red); border-top: 5px solid var(--amber); border-radius: 6px; box-shadow: 0 16px 38px rgba(10, 26, 48, .4); max-width: 330px; padding: 14px 16px 16px; width: 100%; }
+    .critical-alert-dialog { pointer-events: auto; background: #fff; border: 2px solid var(--red); border-top: 5px solid var(--amber); border-radius: 6px; box-shadow: 0 16px 38px rgba(10, 26, 48, .4); max-width: 330px; padding: 14px 16px 16px; width: 100%; }
     .critical-alert-icon { color: var(--red); font-size: 19px; font-weight: 700; line-height: 1; }
     .critical-alert-dialog h2 { color: #8d2632; font-size: 15px; margin: 6px 0 7px; }
     .critical-alert-dialog p { color: #445871; font-size: 11px; line-height: 1.45; margin-bottom: 12px; }
@@ -396,6 +404,17 @@
           </label>
           <p class="mode-copy" id="modeCopy">Bank Internal View · controlled access</p>
           <p class="mode-copy">Internal view shows available actions; regulator view keeps the same status fields but disables override and resolve actions.</p>
+          <div class="role-selector">
+            <label for="roleSelect">Acting as:</label>
+            <select id="roleSelect">
+              <option value="AML Compliance">AML Compliance (Control Owner)</option>
+              <option value="Financial Crime Technology">Financial Crime Technology (Control Owner)</option>
+              <option value="Product Governance">Product Governance (Control Owner)</option>
+              <option value="Enterprise Risk">Enterprise Risk (Control Owner)</option>
+              <option value="CRO" selected>CRO (Approver)</option>
+            </select>
+            <p class="role-caption">Demonstrates that control owners can only act on their own controls, and only the CRO can approve or reject overrides and resolutions.</p>
+          </div>
           <button class="help-button" id="helpButton" type="button" aria-label="Open How this works help">? How this works</button>
         </div>
       </div>
@@ -581,6 +600,7 @@
 
     const grid = document.getElementById("controlsGrid");
     const toggle = document.getElementById("regulatorToggle");
+    let currentRole = "CRO";
     let baselineControls = JSON.parse(JSON.stringify(controls));
     let importedBaseline = null;
     const postDecayBaseline = JSON.parse(JSON.stringify(controls)).map((control) => {
@@ -614,7 +634,7 @@
     let scenarioRunId = 0;
     let criticalFailureAlertShown = false;
     let importedRecoveryTargets = [];
-    let criticalAlertQueue = [];
+    let criticalAlerts = []; // { key, controlId, title, body, routedTo, acknowledgedBy, acknowledgedAt }
     let activeCriticalAlert = null;
     let activityLog = [
       { day: 1, tone: "", action: "Daily control health snapshot loaded from the case-study baseline." }
@@ -716,6 +736,8 @@
     }
     function reviewActions(control, entry) {
       if (!entry.reviewAction || control.reviewStatus !== "Pending Review") return "";
+      // Role gating: only the CRO sees Accept/Reject; everyone else sees a note.
+      if (currentRole !== "CRO") return `<div class="review-actions"><span class="review-note">Pending CRO review.</span></div>`;
       return `<div class="review-actions"><button class="action-button accept-review" type="button" data-review-action="accept" data-control-id="${control.id}">Accept</button><button class="action-button reject-review" type="button" data-review-action="reject" data-control-id="${control.id}">Reject</button></div>`;
     }
     function eventPrefix(entry) {
@@ -751,28 +773,32 @@
     function simulatedAuditTimestamp() {
       return `${formatSimulationDate()} · ${realTimeNow()} · system-generated`;
     }
-    function queueCriticalAlert(key, control, title, body) {
-      if (activeCriticalAlert?.key === key || criticalAlertQueue.some((alert) => alert.key === key)) return;
-      criticalAlertQueue.push({ key, controlId: control.id, title, body });
-      showNextCriticalAlert();
+    // Alerts are routed to a specific role (routedTo) and stay pending until that role acknowledges them.
+    function queueCriticalAlert(key, control, title, body, routedTo) {
+      if (criticalAlerts.some((alert) => alert.key === key)) return;
+      criticalAlerts.push({ key, controlId: control.id, title, body, routedTo: routedTo || control.controlOwner, acknowledgedBy: null, acknowledgedAt: null });
     }
-    function showNextCriticalAlert() {
-      if (activeCriticalAlert || !criticalAlertQueue.length) return;
-      activeCriticalAlert = criticalAlertQueue.shift();
-      document.getElementById("criticalAlertTitle").textContent = activeCriticalAlert.title;
-      document.getElementById("criticalAlertBody").textContent = activeCriticalAlert.body;
-      document.getElementById("criticalAlertModal").classList.add("visible");
+    // Shows the pop-up only to the role the alert is routed to (never in Regulator View).
+    function syncCriticalAlertModal() {
+      const modal = document.getElementById("criticalAlertModal");
+      const next = toggle.checked ? null : criticalAlerts.find((alert) => !alert.acknowledgedBy && alert.routedTo === currentRole);
+      activeCriticalAlert = next || null;
+      if (!next) { modal.classList.remove("visible"); return; }
+      document.getElementById("criticalAlertTitle").textContent = next.title;
+      document.getElementById("criticalAlertBody").textContent = `${next.body} Routed to: ${next.routedTo}.`;
+      modal.classList.add("visible");
     }
     function acknowledgeCriticalAlert() {
-      if (!activeCriticalAlert) return;
-      const control = controls.find((item) => item.id === activeCriticalAlert.controlId);
+      if (!activeCriticalAlert || activeCriticalAlert.routedTo !== currentRole || toggle.checked) return;
+      const alert = activeCriticalAlert;
+      const control = controls.find((item) => item.id === alert.controlId);
+      alert.acknowledgedBy = currentRole;
+      alert.acknowledgedAt = simulatedAuditTimestamp();
       if (control) {
-        control.auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), createdAt: Date.now(), actor: "System", tone: "breach", action: `Critical alert acknowledged by ${control.controlOwner}.` });
+        control.auditTrail.unshift({ timestamp: alert.acknowledgedAt, createdAt: Date.now(), actor: currentRole, tone: "breach", action: `Critical alert "${alert.title}" acknowledged by ${currentRole} (routed to ${alert.routedTo}).` });
       }
       activeCriticalAlert = null;
-      document.getElementById("criticalAlertModal").classList.remove("visible");
       render();
-      showNextCriticalAlert();
     }
     function showAutoPauseBanner() {
       document.getElementById("simulationPauseBanner").hidden = false;
@@ -815,7 +841,13 @@
       if (failed && scenarioKind === "decay" && scenarioStep >= 2) alerts.push({ text: "1 new escalation this scenario period", tone: "critical" });
       if (atRisk) alerts.push({ text: `${atRisk} finding${atRisk > 1 ? "s" : ""} approaching SLA deadline`, tone: "" });
       controls.filter((control) => control.overrideCount > 1).forEach((control) => alerts.push({ text: `Control ${control.obligation} overridden multiple times — escalated to Risk Committee for pattern review.`, tone: "critical" }));
-      document.getElementById("alertCount").textContent = alerts.length;
+      criticalAlerts.forEach((alert) => {
+        const label = alert.title.replace("⚠ ", "");
+        alerts.push(alert.acknowledgedBy
+          ? { text: `${alert.controlId} · ${label} — acknowledged by ${alert.acknowledgedBy}`, tone: "ack" }
+          : { text: `${alert.controlId} · ${label} — awaiting acknowledgement by ${alert.routedTo}`, tone: "critical" });
+      });
+      document.getElementById("alertCount").textContent = alerts.filter((alert) => alert.tone !== "ack").length;
       document.getElementById("alertsList").innerHTML = alerts.length ? alerts.map((alert) => `<div class="alert-item ${alert.tone}">${alert.text}</div>`).join("") : `<p class="empty-note">No active alerts. Current control evidence is within tolerance.</p>`;
     }
     function render() {
@@ -840,6 +872,11 @@
           return `<div class="path-step ${state}"><span class="path-dot"></span>${stage}</div>`;
         }).join("");
         const isVisible = visibleControls.includes(control);
+        // Role gating: only the owning role may Override/Resolve this control.
+        const canAct = currentRole === control.controlOwner;
+        const internalActions = canAct
+          ? `<button class="action-button" data-action="override" data-control-id="${control.id}">Override status</button><button class="action-button" data-action="resolve" data-control-id="${control.id}">Resolve finding</button>${actionForm(control)}`
+          : `<p class="role-note">Only ${escapeHtml(control.controlOwner)} can action this control.</p>`;
         return `<article class="control-card ${isOpen ? "open" : ""} ${isVisible ? "" : "filtered-out"}" data-id="${control.id}">
           <div class="card-head" data-action="toggle" role="button" tabindex="0" aria-expanded="${isOpen}">
             <div><div class="control-id">${control.id}</div><h3 class="control-name">${control.obligation}</h3></div>
@@ -854,7 +891,7 @@
           <div class="detail-panel">
             <div class="detail-grid">
               <div><div class="detail-title">Control record</div><div class="field-list">${detailFields.map(([label, value, full]) => `<div class="field ${full ? "full" : ""}"><span class="data-label">${label}</span><span class="data-value">${value}</span></div>`).join("")}</div></div>
-              <div class="path-wrap"><div class="detail-title">Escalation path · stage ${control.escalationStage + 1} of ${control.escalationPath.length}</div><div class="path">${path}</div><div class="audit-title"><div class="detail-title" style="margin:0">Audit trail</div><span class="empty-note">System logged</span></div><div class="audit-list">${audit}</div><div class="internal-actions"><button class="action-button" data-action="override" data-control-id="${control.id}">Override status</button><button class="action-button" data-action="resolve" data-control-id="${control.id}">Resolve finding</button>${actionForm(control)}</div></div>
+              <div class="path-wrap"><div class="detail-title">Escalation path · stage ${control.escalationStage + 1} of ${control.escalationPath.length}</div><div class="path">${path}</div><div class="audit-title"><div class="detail-title" style="margin:0">Audit trail</div><span class="empty-note">System logged</span></div><div class="audit-list">${audit}</div><div class="internal-actions">${internalActions}</div></div>
             </div>
           </div>
         </article>`;
@@ -867,6 +904,7 @@
       renderAlerts();
       renderSimulation();
       renderEvidence();
+      syncCriticalAlertModal();
       document.querySelectorAll("[data-action='toggle']").forEach((element) => {
         element.addEventListener("click", () => { openControlId = element.closest(".control-card").dataset.id === openControlId ? null : element.closest(".control-card").dataset.id; render(); });
         element.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); element.click(); } });
@@ -984,7 +1022,7 @@
         showSimulationCaption("! Manual override logged — visible to regulators", "bad");
         if (control.riskLevel === "Critical") {
           showToast("Critical override — automatically routed to CRO for review.", "Review routing");
-          queueCriticalAlert(`manual-override-${control.id}-${Date.now()}`, control, "⚠ Critical Override Review", `${control.obligation} has a manual override pending review. Current level: ${control.currentLevel}. The override has been automatically routed to CRO and logged in the audit trail.`);
+          queueCriticalAlert(`manual-override-${control.id}-${Date.now()}`, control, "⚠ Critical Override Review", `${control.obligation} has a manual override pending review. Current level: ${control.currentLevel}. The override has been automatically routed to CRO and logged in the audit trail.`, "CRO");
         }
       }
       activeAction = null;
@@ -1011,6 +1049,8 @@
       autoPauseActive = false;
       scenarioRunning = false;
       criticalFailureAlertShown = false;
+      criticalAlerts = [];
+      activeCriticalAlert = null;
       activityLog = [{ day: 1, tone: "", action: "Daily control health snapshot loaded from the case-study baseline." }];
       openControlId = null;
       clearAutoPauseBanner();
@@ -1044,10 +1084,7 @@
           controls[1].auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), actor: "Automated control monitor", tone: "breach", action: "Scenario currency test failed; review age exceeds policy tolerance." });
           activityLog.unshift({ day: simulationDay, tone: "bad", action: "2014 scenario review lapsed; monitoring scenarios were not refreshed." });
           showSimulationCaption("↓ 2014 review lapse detected", "bad");
-          if (!criticalFailureAlertShown) {
-            criticalFailureAlertShown = true;
-            queueCriticalAlert(`scenario-${scenarioRunId}-critical-failure`, controls[1], "⚠ Critical Control Failure", `${controls[1].obligation} has breached its required threshold. Current level: ${controls[1].currentLevel}. This has been automatically escalated to ${controls[1].escalationPath[0]} and logged in the audit trail.`);
-          }
+          queueCriticalAlert(`scenario-${scenarioRunId}-critical-failure-${controls[1].id}`, controls[1], "⚠ Critical Control Failure", `${controls[1].obligation} has breached its required threshold. Current level: ${controls[1].currentLevel}. This has been automatically escalated to ${controls[1].escalationPath[0]} and logged in the audit trail.`, controls[1].controlOwner);
         } else if (step === 2) {
           controls[2].status = "Failed";
           controls[2].riskLevel = "Critical";
@@ -1055,6 +1092,7 @@
           controls[2].auditTrail.unshift({ timestamp: simulatedAuditTimestamp(), actor: "Automated control monitor", tone: "breach", action: "New product launched without a completed AML assessment." });
           activityLog.unshift({ day: simulationDay, tone: "bad", action: "2017 product launch exception detected; AML assessment evidence was incomplete." });
           showSimulationCaption("↓ 2017 product assessment gap detected", "bad");
+          queueCriticalAlert(`scenario-${scenarioRunId}-critical-failure-${controls[2].id}`, controls[2], "⚠ Critical Control Failure", `${controls[2].obligation} has breached its required threshold. Current level: ${controls[2].currentLevel}. This has been automatically escalated to ${controls[2].escalationPath[0]} and logged in the audit trail.`, controls[2].controlOwner);
         } else if (step === 3) {
           controls[0].status = "At Risk";
           controls[0].riskLevel = "High";
@@ -1073,7 +1111,7 @@
           activityLog.unshift({ day: simulationDay, tone: "bad", action: "2024 critical coverage breach detected; regulator notification triggered." });
           showSimulationCaption("! 2024 breach — regulator notification triggered", "bad");
           showToast("Regulator notification triggered by the 2024 critical breach.", "Automated escalation");
-          queueCriticalAlert(`scenario-${scenarioRunId}-board-escalation`, controls[0], "⚠ Escalation to Board", `${controls[0].obligation} has breached its required threshold. Current level: ${controls[0].currentLevel}. This has been automatically escalated to Board and logged in the audit trail.`);
+          queueCriticalAlert(`scenario-${scenarioRunId}-board-escalation`, controls[0], "⚠ Escalation to Board", `${controls[0].obligation} has breached its required threshold. Current level: ${controls[0].currentLevel}. This has been automatically escalated to Board and logged in the audit trail.`, "CRO");
         }
       } else if (scenarioKind === "importedRecovery") {
         const target = importedRecoveryTargets[step - 1];
@@ -1198,6 +1236,16 @@
       document.body.classList.toggle("regulator-view", toggle.checked);
       document.getElementById("regulatorBanner").classList.toggle("visible", toggle.checked);
       document.getElementById("modeCopy").textContent = toggle.checked ? "Regulator View · strictly read-only" : "Bank Internal View · controlled access";
+      syncCriticalAlertModal();
+    });
+
+    // Role selector: changing the role closes any open action form and re-renders immediately.
+    const roleSelect = document.getElementById("roleSelect");
+    roleSelect.value = currentRole;
+    roleSelect.addEventListener("change", () => {
+      currentRole = roleSelect.value;
+      activeAction = null;
+      render();
     });
 
     const helpModal = document.getElementById("helpModal");
